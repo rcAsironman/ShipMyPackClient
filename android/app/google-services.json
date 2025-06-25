@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "250615515783",
+    "project_id": "shipmypack",
+    "storage_bucket": "shipmypack.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:250615515783:android:f60132bd0348a328304622",
+        "android_client_info": {
+          "package_name": "com.shipmypackclient"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "250615515783-btb9l4c6ct2c6bn9eg7i4b23k3oiicep.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.shipmypackclient",
+            "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
+          }
+        },
+        {
+          "client_id": "250615515783-grriph9h0qvv0oo2qjbkmaku2u4gsb1o.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyALhjSa41VigjquMx9ta2n3BuJY2Egpfsk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "250615515783-grriph9h0qvv0oo2qjbkmaku2u4gsb1o.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "250615515783-2i1tab5sudh1sj1qiub6hqc7bs3skbhq.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.shipmypack.gokart"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
