@@ -36,6 +36,7 @@
     "react-native-reanimated-carousel": "^4.0.2",
     "react-native-safe-area-context": "^5.5.0",
     "react-native-screens": "^4.11.1",
+    "react-native-sms-retriever": "^1.1.1",
     "react-native-svg": "^15.12.0",
     "react-native-swipe-list-view": "^3.2.9",
     "react-native-toast-message": "^2.3.0",
