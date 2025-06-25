@@ -1,28 +1,33 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StatusBar } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StatusBar,
+  Dimensions,
+  Platform,
+} from 'react-native';
 import { SwipeListView } from 'react-native-swipe-list-view';
 import { useNavigation } from '@react-navigation/native';
-import Ionicons from 'react-native-vector-icons/Ionicons';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import { faBell, faTrash } from '@fortawesome/free-solid-svg-icons';
+import { faArrowLeft, faBell, faTrash } from '@fortawesome/free-solid-svg-icons';
 
 const MAX_MESSAGE_LENGTH = 70;
 const ROW_HEIGHT = 96;
+const { height } = Dimensions.get('window');
 
 export default function NotificationScreen() {
   const navigation = useNavigation();
+
   const [notifications, setNotifications] = useState(() =>
     Array.from({ length: 50 }).map((_, i) => {
       const date = new Date();
       const fullMessage =
         'Your package has been processed and will be shipped soon. Tap to view more info.';
-
       const message =
         fullMessage.length > MAX_MESSAGE_LENGTH
           ? fullMessage.slice(0, MAX_MESSAGE_LENGTH - 3) + '...'
           : fullMessage;
-
       return {
         id: `notif-${i}`,
         title: `Shipment Update #${i + 1}`,
@@ -32,7 +37,7 @@ export default function NotificationScreen() {
           hour: '2-digit',
           minute: '2-digit',
         })}`,
-        read: i % 3 !== 0, // every 3rd is unread
+        read: i % 3 !== 0,
       };
     })
   );
@@ -45,10 +50,7 @@ export default function NotificationScreen() {
     setNotifications((prev) =>
       prev.map((n) =>
         n.id === id
-          ? {
-              ...n,
-              read: true,
-            }
+          ? { ...n, read: true }
           : n
       )
     );
@@ -81,7 +83,6 @@ export default function NotificationScreen() {
             </View>
           )}
         </View>
-
         <Text className="text-sm text-gray-600 mt-1" numberOfLines={1}>
           {item.message}
         </Text>
@@ -105,22 +106,41 @@ export default function NotificationScreen() {
   );
 
   return (
-    <SafeAreaView className="flex-1 bg-[#F9FAFB]">
-      <StatusBar backgroundColor="white" barStyle="dark-content" />
+    <View className="flex-1 bg-[#F9FAFB]">
+      {/* StatusBar should be translucent so header can go under it */}
+      <StatusBar backgroundColor="transparent" translucent barStyle="dark-content" />
 
-      {/* Header */}
-      <View className="h-16 px-5 flex-row items-center justify-between bg-white shadow-sm border-b border-gray-100">
+      {/* Header overlaps status bar */}
+      <View
+        style={{
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 44,
+          paddingHorizontal: 16,
+          height: height * 0.12,
+          backgroundColor: 'white',
+          elevation: 5,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 3 },
+          shadowOpacity: 0.1,
+          shadowRadius: 3,
+          zIndex: 10,
+        }}
+        className="shadow-md"
+      >
         <TouchableOpacity
           onPress={() => navigation.goBack()}
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
         >
-          <Ionicons name="arrow-back" size={24} color="#000" />
+          <FontAwesomeIcon icon={faArrowLeft} size={24} color="black" />
         </TouchableOpacity>
-        <Text className="text-lg font-bold text-black">Notifications</Text>
-        <View className="w-6" />
+
+        <Text style={{ fontSize: 20, fontWeight: '700', color: 'black' }}>Notifications</Text>
+
+        <View style={{ width: 24 }} />
       </View>
 
-      {/* List */}
       <SwipeListView
         data={notifications}
         keyExtractor={(item) => item.id}
@@ -131,6 +151,6 @@ export default function NotificationScreen() {
         contentContainerStyle={{ paddingTop: 10, paddingBottom: 24 }}
         showsVerticalScrollIndicator={false}
       />
-    </SafeAreaView>
+    </View>
   );
 }

@@ -9,7 +9,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import Ionicons from 'react-native-vector-icons/Ionicons';
+import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
+import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
 
 export default function NotificationDetailScreen() {
   const navigation = useNavigation();
@@ -37,7 +38,7 @@ export default function NotificationDetailScreen() {
           onPress={() => navigation.goBack()}
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
         >
-          <Ionicons name="arrow-back" size={24} color="#111" />
+          <FontAwesomeIcon icon={faArrowLeft} size={24} color="black" />
         </TouchableOpacity>
         <Text className="text-lg font-semibold text-black">Notification</Text>
         <View className="w-6" />

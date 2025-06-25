@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { StatusBar, View, Text, Image, TouchableOpacity, ScrollView, Dimensions, Platform, Animated } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Ionicons from 'react-native-vector-icons/Ionicons';
-import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import ImageCarousel from '../components/ImageCarousel';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome'
-import { faHeadset } from '@fortawesome/free-solid-svg-icons/faHeadset'
+import { faHeadset, height } from '@fortawesome/free-solid-svg-icons/faHeadset'
+import { faBell } from '@fortawesome/free-solid-svg-icons';
+
 import AdvertisementPopup from '../components/AdvertisementPopup';
 const { width } = Dimensions.get('window');
 
@@ -18,21 +18,24 @@ const HomeScreen = ({ navigation }: { navigation: any }) => {
   return (
     <>
       <StatusBar backgroundColor="white" barStyle="dark-content" />
-      <SafeAreaView style={{
-        flex: 1,
-        backgroundColor: 'white', // or 'bg-airbnb-primary'
-        elevation: 5,
-      }}
-        edges={['top']}>
+      <SafeAreaView
+        style={{
+          flex: 1,
+          backgroundColor: 'white',
+          paddingTop: Platform.OS === 'android' ? 0 : 0,
+        }}
+        edges={['right']}
+      >
         {/* Header */}
         <View
           style={{
             flexDirection: 'row',
             justifyContent: 'space-between',
             alignItems: 'center',
-            marginBottom: 4,
+            marginBottom: 0,
+            paddingTop: height * 0.05,
             paddingHorizontal: 16,
-            height: 70, // or use a fixed height like h-[12%]
+            height: height * 0.22, // or use a fixed height like h-[12%]
             backgroundColor: 'white',
             elevation: 5, // Android
             shadowColor: '#000', // iOS
@@ -51,12 +54,12 @@ const HomeScreen = ({ navigation }: { navigation: any }) => {
             <TouchableOpacity
               onPress={() => navigation.navigate('NotificationScreen')}
             >
-              <Ionicons name="notifications-outline" size={24} color="black" />
+              <FontAwesomeIcon icon={faBell} size={24} color="black" />
             </TouchableOpacity>
             <TouchableOpacity
-            onPress={() => navigation.navigate('SupportScreen')}
+              onPress={() => navigation.navigate('SupportScreen')}
             >
-            <FontAwesomeIcon size={24} color="black" icon={faHeadset} />
+              <FontAwesomeIcon size={24} color="black" icon={faHeadset} />
             </TouchableOpacity>
           </View>
         </View>
