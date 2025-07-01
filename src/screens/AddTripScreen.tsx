@@ -460,7 +460,7 @@ export default function AddTripScreen({ navigation }: { navigation: any }) {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50">
+    <SafeAreaView className="flex-1 bg-white">
       <StatusBar backgroundColor="white" barStyle="dark-content" />
 
       {/* FIXED HEADER - Styled to match HomeScreen header */}
@@ -469,7 +469,7 @@ export default function AddTripScreen({ navigation }: { navigation: any }) {
           flexDirection: 'row',
           justifyContent: 'space-between',
           alignItems: 'center',
-          paddingTop: Platform.OS === 'android' ? (StatusBar?.currentHeight || 0) + 20 : screenHeight * 0.05,
+          paddingTop: Platform.OS === 'android' ? (StatusBar?.currentHeight || 0) + 20 : screenHeight * 0.02,
           paddingBottom: 20,
           paddingHorizontal: 16,
           backgroundColor: 'white',
@@ -482,10 +482,7 @@ export default function AddTripScreen({ navigation }: { navigation: any }) {
         }}
         className="shadow-md"
       >
-        <TouchableOpacity onPress={() => navigation?.goBack?.()} style={{ padding: 5 }}>
-          <FontAwesomeIcon icon={faArrowLeft} size={24} color="black" />
-        </TouchableOpacity>
-
+       
         <Text style={{ fontSize: 20, fontWeight: '700', color: 'black', flex: 1, textAlign: 'center' }}>
           Add Your Trip
         </Text>
