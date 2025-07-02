@@ -1,4 +1,4 @@
-import React, { useState } from 'react'; // Removed useRef, useCallback as they are no longer needed without BottomSheet
+import React, { useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -11,29 +11,29 @@ import {
   Image,
   Modal,
   SafeAreaView,
+  StyleSheet,
+  TextInput,
+  KeyboardAvoidingView,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import {
-  faHeadset,
   faCreditCard,
-  faBox,
-  faBook,
-  faMapMarkerAlt,
-  faFileInvoiceDollar,
-  faGift,
   faMoneyBillWave,
   faAward,
   faShareAlt,
   faInfoCircle,
-  faReceipt,
   faLock,
   faBell,
   faSignOutAlt,
-  faEdit, // Used for Edit Image button in modal
-  faTimes, // Used for closing modals
+  faEdit,
+  faTimes,
+  faUniversity, // For Bank Account
+  faQrcode, // For UPI ID
+  faTrashAlt, // For delete
 } from '@fortawesome/free-solid-svg-icons';
 import { pick, types, isCancel, DocumentPickerResponse } from '@react-native-documents/picker';
+import { Modalize } from 'react-native-modalize';
 
 // Get screen dimensions for responsive layout and full-screen modal
 const { height: screenHeight, width: screenWidth } = Dimensions.get('window');
@@ -47,90 +47,478 @@ const NW_COLORS = {
   danger: '#DC3545',
   black: '#000000',
   headerShadow: 'rgba(0, 0, 0, 0.1)',
+  accent: '#007AFF', // A professional blue accent
 };
+
+// --- Interfaces for Type Safety (Optional but good practice) ---
+interface BankAccountDetails {
+  bankName: string;
+  accountNumber: string;
+  ifsc: string;
+  holderName: string;
+}
+
+interface UPIDetails {
+  upiId: string;
+  name: string;
+}
+
+interface PaymentMethod {
+  id: string;
+  type: 'Bank Account' | 'UPI ID';
+  details: BankAccountDetails | UPIDetails;
+}
+
+// Dummy data for previously added payment methods
+const initialPaymentMethods: PaymentMethod[] = [
+  { id: '1', type: 'Bank Account', details: { bankName: 'State Bank of India', accountNumber: '1234567891234', ifsc: 'SBIN0001234', holderName: 'John Doe' } },
+  { id: '2', type: 'UPI ID', details: { upiId: 'john.doe@paytm', name: 'John Doe' } },
+];
 
 const ProfileScreen = ({ navigation }: { navigation: any }) => {
   const insets = useSafeAreaInsets();
-  // Controls the full-screen image preview modal
   const [imagePreviewModalVisible, setImagePreviewModalVisible] = useState(false);
-  // Profile picture URI state
   const [currentProfilePictureUri, setCurrentProfilePictureUri] = useState('https://media.licdn.com/dms/image/v2/C5603AQGaffS4u7szjw/profile-displayphoto-shrink_200_200/profile-displayphoto-shrink_200_200/0/1621060030088?e=2147483647&v=beta&t=vE1XuR7uG5YbHzLltK4hu96nm5SwU486qnIGrijGzek');
 
-  // Handler for generic navigation (now uses Alert.alert for all list items)
-  const handleNavigation = (screenName: string) => {
-    console.log(`Maps to ${screenName}`);
-    // Reverted to Alert.alert as no bottom sheet package is available
-    Alert.alert('Navigation', `Navigating to ${screenName} (Functionality not implemented)`);
+  const detailModalRef = useRef<Modalize>(null);
+  const [modalContentKey, setModalContentKey] = useState('');
+  const [modalTitle, setModalTitle] = useState('');
+
+  // States for Payment Settings
+  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>(initialPaymentMethods);
+  const [selectedPaymentMethodType, setSelectedPaymentMethodType] = useState<'Bank Account' | 'UPI ID' | null>(null);
+  const [bankDetails, setBankDetails] = useState<Omit<BankAccountDetails, 'accountNumber'> & { accountNumber: string, confirmAccountNumber: string }>({ bankName: '', accountNumber: '', confirmAccountNumber: '', ifsc: '', holderName: '' });
+  const [upiDetails, setUpiDetails] = useState<UPIDetails>({ upiId: '', name: '' });
+
+  const openDetailModal = (key: string, title: string) => {
+    setModalContentKey(key);
+    setModalTitle(title);
+    detailModalRef.current?.open();
   };
 
-  // Handler for displaying the profile picture in full screen
   const handleProfilePicturePress = () => {
     setImagePreviewModalVisible(true);
   };
 
-  // Handler for closing the full-screen image modal
   const closeImagePreviewModal = () => {
     setImagePreviewModalVisible(false);
   };
 
-  // Function to handle image selection using @react-native-documents/picker
   const handleEditImage = async () => {
     try {
-      // Use pick function, which returns an array of DocumentPickerResponse
       const [file]: DocumentPickerResponse[] = await pick({
-        type: [types.images], // Specify that we want to pick image files
-        copyTo: 'cachesDirectory', // Optional: copy the file to a cache directory
+        type: [types.images],
+        copyTo: 'cachesDirectory',
       });
 
       if (file) {
-        console.log('Picked image URI:', file.uri);
-        // Update the profile picture URI
         setCurrentProfilePictureUri(file.uri);
-        // Close the image preview modal after picking
         setImagePreviewModalVisible(false);
       }
     } catch (err) {
-      if (isCancel(err)) { // Use isCancel from the package
-        // User cancelled the picker
+      if (isCancel(err)) {
         console.log('User cancelled image selection');
       } else {
-        // A real error occurred
         console.error('DocumentPicker Error:', err);
         Alert.alert('Error', 'Failed to pick image. Please try again.');
       }
     }
   };
 
-  // Calculate dynamic top padding for header and modal close button
-  const headerPaddingTop = Platform.OS === 'android' ? (StatusBar?.currentHeight || 0) : screenHeight * 0.02;
-  const modalCloseButtonTop = Platform.OS === 'android' ? (StatusBar.currentHeight || 0) + 20 : insets.top + 20;
+  const addPaymentMethod = () => {
+    if (selectedPaymentMethodType === 'Bank Account') {
+      if (!bankDetails.bankName || !bankDetails.accountNumber || !bankDetails.confirmAccountNumber || !bankDetails.ifsc || !bankDetails.holderName) {
+        Alert.alert('Error', 'Please fill all bank account details.');
+        return;
+      }
+      if (bankDetails.accountNumber !== bankDetails.confirmAccountNumber) {
+        Alert.alert('Error', 'Account numbers do not match.');
+        return;
+      }
+      setPaymentMethods([
+        ...paymentMethods,
+        {
+          id: String(Date.now()),
+          type: 'Bank Account',
+          details: {
+            bankName: bankDetails.bankName,
+            accountNumber: bankDetails.accountNumber,
+            ifsc: bankDetails.ifsc,
+            holderName: bankDetails.holderName,
+          },
+        },
+      ]);
+      Alert.alert('Success', 'Bank Account added successfully!');
+      setSelectedPaymentMethodType(null); // Reset selection
+      setBankDetails({ bankName: '', accountNumber: '', confirmAccountNumber: '', ifsc: '', holderName: '' }); // Clear fields
+    } else if (selectedPaymentMethodType === 'UPI ID') {
+      if (!upiDetails.upiId || !upiDetails.name) {
+        Alert.alert('Error', 'Please fill all UPI ID details.');
+        return;
+      }
+      setPaymentMethods([
+        ...paymentMethods,
+        {
+          id: String(Date.now()),
+          type: 'UPI ID',
+          details: {
+            upiId: upiDetails.upiId,
+            name: upiDetails.name,
+          },
+        },
+      ]);
+      Alert.alert('Success', 'UPI ID added successfully!');
+      setSelectedPaymentMethodType(null); // Reset selection
+      setUpiDetails({ upiId: '', name: '' }); // Clear fields
+    }
+  };
+
+  const removePaymentMethod = (id: string) => {
+    Alert.alert(
+      'Remove Payment Method',
+      'Are you sure you want to remove this payment method?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Remove',
+          style: 'destructive',
+          onPress: () => {
+            setPaymentMethods(paymentMethods.filter((method) => method.id !== id));
+            Alert.alert('Success', 'Payment method removed.');
+          },
+        },
+      ]
+    );
+  };
+
+  // This function will render content based on the `modalContentKey`
+  const renderDetailModalContent = () => {
+    switch (modalContentKey) {
+      case 'PaymentSettings':
+        return (
+          <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            style={{ flex: 1 }}
+          >
+            <ScrollView contentContainerStyle={styles.modalScrollContent}>
+              <Text className="text-xl font-bold text-[#212121] mb-4">Manage Payment Methods</Text>
+
+              {/* Display Previous Payment Details if they exist */}
+              {paymentMethods.length > 0 && (
+                <View className="mb-6">
+                  <Text className="text-lg font-semibold text-[#212121] mb-3">Your Saved Payment Methods</Text>
+                  {paymentMethods.map((method) => (
+                    <View key={method.id} className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-3 flex-row items-center justify-between shadow-sm">
+                      <View className="flex-1 mr-4">
+                        <Text className="text-base font-semibold text-[#212121]">{method.type}</Text>
+                        {method.type === 'Bank Account' ? (
+                          <>
+                            <Text className="text-sm text-[#666666] mt-1">{method.details.bankName} - XXXX{(method.details as BankAccountDetails).accountNumber.slice(-4)}</Text>
+                            <Text className="text-sm text-[#666666]">Holder: {(method.details as BankAccountDetails).holderName}</Text>
+                          </>
+                        ) : (
+                          <Text className="text-sm text-[#666666] mt-1">{(method.details as UPIDetails).upiId}</Text>
+                        )}
+                      </View>
+                      <TouchableOpacity onPress={() => removePaymentMethod(method.id)} className="p-2 rounded-full bg-red-100">
+                        <FontAwesomeIcon icon={faTrashAlt} size={20} color={NW_COLORS.danger} />
+                      </TouchableOpacity>
+                    </View>
+                  ))}
+                </View>
+              )}
+
+              <Text className="text-lg font-semibold text-[#212121] mb-3">Add New Payment Method</Text>
+
+              {/* Ask user to add payment method type (Bank Account / UPI ID) */}
+              {!selectedPaymentMethodType ? (
+                <View>
+                  <TouchableOpacity
+                    className="flex-row items-center justify-center bg-blue-50 rounded-lg py-4 mb-3 border border-blue-200"
+                    onPress={() => setSelectedPaymentMethodType('Bank Account')}
+                  >
+                    <FontAwesomeIcon icon={faUniversity} size={24} color={NW_COLORS.accent} />
+                    <Text className="text-lg font-semibold text-blue-800 ml-3">Bank Account</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    className="flex-row items-center justify-center bg-green-50 rounded-lg py-4 border border-green-200"
+                    onPress={() => setSelectedPaymentMethodType('UPI ID')}
+                  >
+                    <FontAwesomeIcon icon={faQrcode} size={24} color={'#28A745'} />
+                    <Text className="text-lg font-semibold text-green-800 ml-3">UPI ID</Text>
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                // Allow user to provide input in fields once a type is selected
+                <View>
+                  {selectedPaymentMethodType === 'Bank Account' && (
+                    <View>
+                      <TextInput
+                        className="border border-gray-300 rounded-lg p-3 mb-3 text-base text-gray-800"
+                        placeholder="Bank Name"
+                        value={bankDetails.bankName}
+                        onChangeText={(text) => setBankDetails({ ...bankDetails, bankName: text })}
+                      />
+                      <TextInput
+                        className="border border-gray-300 rounded-lg p-3 mb-3 text-base text-gray-800"
+                        placeholder="Account Holder Name"
+                        value={bankDetails.holderName}
+                        onChangeText={(text) => setBankDetails({ ...bankDetails, holderName: text })}
+                      />
+                      <TextInput
+                        className="border border-gray-300 rounded-lg p-3 mb-3 text-base text-gray-800"
+                        placeholder="Account Number"
+                        keyboardType="numeric"
+                        value={bankDetails.accountNumber}
+                        onChangeText={(text) => setBankDetails({ ...bankDetails, accountNumber: text })}
+                      />
+                      <TextInput
+                        className="border border-gray-300 rounded-lg p-3 mb-3 text-base text-gray-800"
+                        placeholder="Confirm Account Number"
+                        keyboardType="numeric"
+                        value={bankDetails.confirmAccountNumber}
+                        onChangeText={(text) => setBankDetails({ ...bankDetails, confirmAccountNumber: text })}
+                      />
+                      <TextInput
+                        className="border border-gray-300 rounded-lg p-3 mb-3 text-base text-gray-800"
+                        placeholder="IFSC Code"
+                        autoCapitalize="characters"
+                        value={bankDetails.ifsc}
+                        onChangeText={(text) => setBankDetails({ ...bankDetails, ifsc: text })}
+                      />
+                      <TouchableOpacity
+                        className="bg-blue-600 rounded-lg py-4 items-center mb-3 shadow-sm"
+                        onPress={addPaymentMethod}
+                      >
+                        <Text className="text-white text-lg font-semibold">Add Bank Account</Text>
+                      </TouchableOpacity>
+                    </View>
+                  )}
+
+                  {selectedPaymentMethodType === 'UPI ID' && (
+                    <View>
+                      <TextInput
+                        className="border border-gray-300 rounded-lg p-3 mb-3 text-base text-gray-800"
+                        placeholder="UPI ID (e.g., user@bank)"
+                        keyboardType="email-address"
+                        autoCapitalize="none"
+                        value={upiDetails.upiId}
+                        onChangeText={(text) => setUpiDetails({ ...upiDetails, upiId: text })}
+                      />
+                      <TextInput
+                        className="border border-gray-300 rounded-lg p-3 mb-3 text-base text-gray-800"
+                        placeholder="Name (as per UPI)"
+                        value={upiDetails.name}
+                        onChangeText={(text) => setUpiDetails({ ...upiDetails, name: text })}
+                      />
+                      <TouchableOpacity
+                        className="bg-green-600 rounded-lg py-4 items-center mb-3 shadow-sm"
+                        onPress={addPaymentMethod}
+                      >
+                        <Text className="text-white text-lg font-semibold">Add UPI ID</Text>
+                      </TouchableOpacity>
+                    </View>
+                  )}
+                  {/* Cancel button to go back to type selection */}
+                  <TouchableOpacity
+                    className="bg-gray-200 rounded-lg py-3 items-center"
+                    onPress={() => {
+                      setSelectedPaymentMethodType(null);
+                      setBankDetails({ bankName: '', accountNumber: '', confirmAccountNumber: '', ifsc: '', holderName: '' });
+                      setUpiDetails({ upiId: '', name: '' });
+                    }}
+                  >
+                    <Text className="text-gray-800 text-base font-semibold">Cancel</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+            </ScrollView>
+          </KeyboardAvoidingView>
+        );
+      case 'Wallet':
+        return (
+          <ScrollView contentContainerStyle={styles.modalScrollContent}>
+            <Text className="text-xl font-bold text-[#212121] mb-4">Your Wallet Balance</Text>
+            <View className="flex-row items-center justify-between bg-green-50 rounded-lg p-4 mb-6">
+              <Text className="text-lg font-medium text-green-700">Current Balance:</Text>
+              <Text className="text-3xl font-bold text-green-800">₹ 1,250.00</Text>
+            </View>
+            <Text className="text-base text-[#666666] mb-6">
+              Your wallet offers a convenient way to pay for services. Top up your balance
+              instantly or review your past transactions.
+            </Text>
+            <TouchableOpacity className="bg-green-600 rounded-lg py-4 items-center mb-4 shadow-sm">
+              <Text className="text-white text-lg font-semibold">Top Up Wallet</Text>
+            </TouchableOpacity>
+            <TouchableOpacity className="bg-gray-100 border border-gray-300 rounded-lg py-4 items-center shadow-sm" onPress={() => Alert.alert("Transaction History", "This action is not implemented yet.")}>
+              <Text className="text-gray-800 text-lg font-semibold">View Transaction History</Text>
+            </TouchableOpacity>
+          </ScrollView>
+        );
+      case 'Coupons':
+        return (
+          <ScrollView contentContainerStyle={styles.modalScrollContent}>
+            <Text className="text-xl font-bold text-[#212121] mb-4">Exclusive Coupons & Rewards</Text>
+            <Text className="text-base text-[#666666] mb-6">
+              Discover and apply your personalized coupons and exciting rewards
+              to enjoy discounts on your next orders.
+            </Text>
+            {/* Example Coupon Cards */}
+            <View className="bg-yellow-100 border border-yellow-400 p-4 rounded-lg mb-4 shadow-sm">
+              <Text className="text-lg font-bold text-yellow-800 mb-1">SAVE20</Text>
+              <Text className="text-base text-yellow-700 mb-2">Get 20% off on orders above ₹700</Text>
+              <Text className="text-sm text-yellow-600">Expires: 31st Dec 2025</Text>
+            </View>
+            <View className="bg-blue-100 border border-blue-400 p-4 rounded-lg mb-4 shadow-sm">
+              <Text className="text-lg font-bold text-blue-800 mb-1">FREEDELIVERY</Text>
+              <Text className="text-base text-blue-700 mb-2">Free delivery on your next 3 orders</Text>
+              <Text className="text-sm text-blue-600">Valid for 7 days</Text>
+            </View>
+            <TouchableOpacity className="bg-airbnb-primary rounded-lg py-4 items-center mt-4 shadow-sm">
+              <Text className="text-white text-lg font-semibold">Browse All Offers</Text>
+            </TouchableOpacity>
+          </ScrollView>
+        );
+      case 'ShareApp':
+        return (
+          <ScrollView contentContainerStyle={styles.modalScrollContent}>
+            <Text className="text-xl font-bold text-[#212121] mb-4">Share ShipMyPack</Text>
+            <Text className="text-base text-[#666666] mb-6">
+              Help your friends and family discover the convenience of ShipMyPack.
+              Share our app and spread the word!
+            </Text>
+            <TouchableOpacity className="bg-green-600 rounded-lg py-4 items-center mb-4 shadow-sm" onPress={() => Alert.alert("Share", "Sharing via native share sheet...")}>
+              <Text className="text-white text-lg font-semibold">Share via WhatsApp</Text>
+            </TouchableOpacity>
+            <TouchableOpacity className="bg-blue-600 rounded-lg py-4 items-center shadow-sm" onPress={() => Alert.alert("Share", "Sharing via Facebook...")}>
+              <Text className="text-white text-lg font-semibold">Share on Social Media</Text>
+            </TouchableOpacity>
+            <Text className="text-center text-sm text-[#666666] mt-6">
+              Thank you for helping us grow!
+            </Text>
+          </ScrollView>
+        );
+      case 'AboutUs':
+        return (
+          <ScrollView contentContainerStyle={styles.modalScrollContent}>
+            <Text className="text-xl font-bold text-[#212121] mb-4">About ShipMyPack</Text>
+            <Text className="text-base text-[#666666] mb-4">
+              ShipMyPack is dedicated to providing efficient, reliable, and affordable shipping solutions.
+              Our mission is to simplify logistics for businesses and individuals alike.
+            </Text>
+            <Text className="text-base text-[#666666] mb-4">
+              Founded in 20XX, we leverage cutting-edge technology and a network of trusted partners
+              to ensure your packages reach their destination safely and on time.
+            </Text>
+            <Text className="text-base text-[#666666] mb-6">
+              We are committed to continuous improvement and customer satisfaction.
+            </Text>
+            <TouchableOpacity className="bg-gray-100 border border-gray-300 rounded-lg py-4 items-center shadow-sm" onPress={() => Alert.alert("Website", "Opening website...")}>
+              <Text className="text-gray-800 text-lg font-semibold">Visit Our Website</Text>
+            </TouchableOpacity>
+          </ScrollView>
+        );
+      case 'AccountPrivacy':
+        return (
+          <ScrollView contentContainerStyle={styles.modalScrollContent}>
+            <Text className="text-xl font-bold text-[#212121] mb-4">Account Privacy & Security</Text>
+            <Text className="text-base text-[#666666] mb-4">
+              Your privacy is our top priority. We use industry-standard encryption and security
+              measures to protect your personal information and transaction data.
+            </Text>
+            <Text className="text-base text-[#666666] mb-6">
+              Here you can manage your privacy settings, review our data policy,
+              and take steps to further secure your account.
+            </Text>
+            <TouchableOpacity className="bg-blue-600 rounded-lg py-4 items-center mb-4 shadow-sm" onPress={() => Alert.alert("Privacy Policy", "Showing privacy policy...")}>
+              <Text className="text-white text-lg font-semibold">Review Privacy Policy</Text>
+            </TouchableOpacity>
+            <TouchableOpacity className="bg-gray-100 border border-gray-300 rounded-lg py-4 items-center shadow-sm" onPress={() => Alert.alert("Security", "Managing security settings...")}>
+              <Text className="text-gray-800 text-lg font-semibold">Security Settings</Text>
+            </TouchableOpacity>
+          </ScrollView>
+        );
+      case 'NotificationPreferences':
+        return (
+          <ScrollView contentContainerStyle={styles.modalScrollContent}>
+            <Text className="text-xl font-bold text-[#212121] mb-4">Notification Preferences</Text>
+            <Text className="text-base text-[#666666] mb-6">
+              Control how you receive updates from ShipMyPack.
+              Customize alerts for order status, promotions, and important announcements.
+            </Text>
+            <View className="mb-4">
+              <Text className="text-lg font-medium text-[#212121] mb-2">Email Notifications:</Text>
+              <TouchableOpacity className="bg-gray-100 border border-gray-300 rounded-lg py-3 px-4 flex-row justify-between items-center">
+                <Text className="text-base text-gray-800">Order Updates</Text>
+                <Text className="text-blue-500">On/Off Switch (Placeholder)</Text>
+              </TouchableOpacity>
+              {/* Add more switches for other notification types */}
+            </View>
+            <View className="mb-4">
+              <Text className="text-lg font-medium text-[#212121] mb-2">Push Notifications:</Text>
+              <TouchableOpacity className="bg-gray-100 border border-gray-300 rounded-lg py-3 px-4 flex-row justify-between items-center">
+                <Text className="text-base text-gray-800">Promotions</Text>
+                <Text className="text-blue-500">On/Off Switch (Placeholder)</Text>
+              </TouchableOpacity>
+            </View>
+            <TouchableOpacity className="bg-blue-600 rounded-lg py-4 items-center mt-4 shadow-sm" onPress={() => Alert.alert("Save", "Notification settings saved!")}>
+              <Text className="text-white text-lg font-semibold">Save Preferences</Text>
+            </TouchableOpacity>
+          </ScrollView>
+        );
+      case 'Logout': // This case is handled by Alert, but included for completeness if modal were used
+        return (
+          <View className="p-4 items-center">
+            <Text className="text-xl font-bold text-[#212121] mb-4">Log Out</Text>
+            <Text className="text-base text-[#666666] mb-6 text-center">
+              Are you sure you want to log out from your account?
+            </Text>
+            <TouchableOpacity className="bg-red-600 rounded-lg py-4 w-full items-center mb-4 shadow-sm" onPress={() => { detailModalRef.current?.close(); console.log('User logged out'); }}>
+              <Text className="text-white text-lg font-semibold">Log Out</Text>
+            </TouchableOpacity>
+            <TouchableOpacity className="bg-gray-100 border border-gray-300 rounded-lg py-4 w-full items-center shadow-sm" onPress={() => detailModalRef.current?.close()}>
+              <Text className="text-gray-800 text-lg font-semibold">Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        );
+      default:
+        return (
+          <View className="p-4">
+            <Text className="text-base text-gray-700">
+              Content for {modalTitle} is not yet defined.
+            </Text>
+          </View>
+        );
+    }
+  };
+
 
   return (
     <>
-       <SafeAreaView className="flex-1 bg-white">
-      <StatusBar backgroundColor="white" barStyle="dark-content" />
-      {/* FIXED HEADER - Styled to match HomeScreen header */}
-      <View
-        style={{
-          flexDirection: 'row',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          paddingTop: Platform.OS === 'android' ? (StatusBar?.currentHeight || 0) : screenHeight * 0.02,
-          paddingBottom: 20,
-          paddingHorizontal: 16,
-          backgroundColor: 'white',
-          elevation: 5,
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 5 },
-          shadowOpacity: 0.1,
-          shadowRadius: 3,
-          zIndex: 10,
-        }}
-        className="shadow-md"
-      >
-         <Text style={{ fontSize: 20, fontWeight: '700', color: 'black', flex: 1, textAlign: 'center' }}>
-          Profile
-        </Text>
+      <SafeAreaView className="flex-1 bg-white">
+        <StatusBar backgroundColor="white" barStyle="dark-content" />
+        {/* FIXED HEADER - Styled to match HomeScreen header */}
+        <View
+          style={{
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            paddingTop: Platform.OS === 'android' ? (StatusBar?.currentHeight || 0) : insets.top + 10,
+            paddingBottom: 20,
+            paddingHorizontal: 16,
+            backgroundColor: 'white',
+            elevation: 5,
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 5 },
+            shadowOpacity: 0.1,
+            shadowRadius: 3,
+            zIndex: 10,
+          }}
+          className="shadow-md"
+        >
+          <Text style={{ fontSize: 20, fontWeight: '700', color: 'black', flex: 1, textAlign: 'center' }}>
+            Profile
+          </Text>
         </View>
 
         <ScrollView
@@ -142,7 +530,7 @@ const ProfileScreen = ({ navigation }: { navigation: any }) => {
             <Text className="text-[13px] font-semibold text-[#666666] mb-3 ml-1 uppercase">Your account</Text>
 
             {/* Profile Picture, Name, Phone Number Section */}
-            <View className="bg-white rounded-xl p-4 mb-2.5 flex-row items-center">
+            <View className="bg-white rounded-xl p-4 mb-2.5 flex-row items-center shadow-sm">
               {/* Profile Picture */}
               <TouchableOpacity onPress={handleProfilePicturePress} className="w-[70px] h-[70px] rounded-full overflow-hidden bg-[#F8F8F8] justify-center items-center mr-4">
                 <Image source={{ uri: currentProfilePictureUri }} className="w-full h-full rounded-full" />
@@ -152,55 +540,26 @@ const ProfileScreen = ({ navigation }: { navigation: any }) => {
               <View className="flex-1 justify-center">
                 <Text className="text-xl font-bold text-[#212121] mb-0.5">John Doe</Text>
                 <Text className="text-base text-[#666666]">+91-9989348841</Text>
-                {/* Removed 'Edit Profile' option from here as requested */}
               </View>
             </View>
-
-            {/* Quick Action Buttons */}
-            <View className="flex-row justify-between mt-6 mb-2.5 gap-2">
-              <TouchableOpacity className="flex-1 bg-white rounded-xl py-4 px-2.5 items-center justify-center" onPress={() => navigation.navigate('SupportScreen')}>
-                <FontAwesomeIcon icon={faHeadset} size={24} color={NW_COLORS.textPrimary} />
-                <Text className="mt-2 text-sm font-medium text-[#212121] text-center">Support</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-
-          {/* YOUR INFORMATION section */}
-          <View className="px-4 py-2.5 mt-2.5">
-            <Text className="text-[13px] font-semibold text-[#666666] mb-3 ml-1 uppercase">YOUR INFORMATION</Text>
-            <TouchableOpacity className="flex-row items-center justify-between bg-white rounded-xl py-3.5 px-4 mb-2 border-0" onPress={() => handleNavigation('Your orders')}>
-              <View className="flex-row items-center">
-                <FontAwesomeIcon icon={faBox} size={20} color={NW_COLORS.textPrimary} />
-                <Text className="text-base text-[#212121] ml-4 flex-1">Your orders</Text>
-              </View>
-            </TouchableOpacity>
-           
-            <TouchableOpacity className="flex-row items-center justify-between bg-white rounded-xl py-3.5 px-4 mb-2 border-0" onPress={() => handleNavigation('Address book')}>
-              <View className="flex-row items-center">
-                <FontAwesomeIcon icon={faMapMarkerAlt} size={20} color={NW_COLORS.textPrimary} />
-                <Text className="text-base text-[#212121] ml-4 flex-1">Address book</Text>
-              </View>
-            </TouchableOpacity>
-           
-            
           </View>
 
           {/* PAYMENT AND COUPONS section */}
           <View className="px-4 py-2.5 mt-2.5">
             <Text className="text-[13px] font-semibold text-[#666666] mb-3 ml-1 uppercase">PAYMENT AND COUPONS</Text>
-            <TouchableOpacity className="flex-row items-center justify-between bg-white rounded-xl py-3.5 px-4 mb-2 border-0" onPress={() => handleNavigation('Payment settings')}>
+            <TouchableOpacity className="flex-row items-center justify-between bg-white rounded-xl py-3.5 px-4 mb-2 shadow-sm" onPress={() => openDetailModal('PaymentSettings', 'Payment Settings')}>
               <View className="flex-row items-center">
                 <FontAwesomeIcon icon={faCreditCard} size={20} color={NW_COLORS.textPrimary} />
                 <Text className="text-base text-[#212121] ml-4 flex-1">Payment settings</Text>
               </View>
             </TouchableOpacity>
-            <TouchableOpacity className="flex-row items-center justify-between bg-white rounded-xl py-3.5 px-4 mb-2 border-0" onPress={() => handleNavigation('Wallet')}>
+            <TouchableOpacity className="flex-row items-center justify-between bg-white rounded-xl py-3.5 px-4 mb-2 shadow-sm" onPress={() => openDetailModal('Wallet', 'My Wallet')}>
               <View className="flex-row items-center">
                 <FontAwesomeIcon icon={faMoneyBillWave} size={20} color={NW_COLORS.textPrimary} />
                 <Text className="text-base text-[#212121] ml-4 flex-1">Wallet</Text>
               </View>
             </TouchableOpacity>
-            <TouchableOpacity className="flex-row items-center justify-between bg-white rounded-xl py-3.5 px-4 mb-2 border-0" onPress={() => handleNavigation('Your collected rewards')}>
+            <TouchableOpacity className="flex-row items-center justify-between bg-white rounded-xl py-3.5 px-4 mb-2 shadow-sm" onPress={() => openDetailModal('Coupons', 'Coupons & Rewards')}>
               <View className="flex-row items-center">
                 <FontAwesomeIcon icon={faAward} size={20} color={NW_COLORS.textPrimary} />
                 <Text className="text-base text-[#212121] ml-4 flex-1">Coupons for you</Text>
@@ -211,32 +570,32 @@ const ProfileScreen = ({ navigation }: { navigation: any }) => {
           {/* OTHER INFORMATION section */}
           <View className="px-4 py-2.5 mt-2.5">
             <Text className="text-[13px] font-semibold text-[#666666] mb-3 ml-1 uppercase">OTHER INFORMATION</Text>
-            <TouchableOpacity className="flex-row items-center justify-between bg-white rounded-xl py-3.5 px-4 mb-2 border-0" onPress={() => handleNavigation('Share the app')}>
+            <TouchableOpacity className="flex-row items-center justify-between bg-white rounded-xl py-3.5 px-4 mb-2 shadow-sm" onPress={() => openDetailModal('ShareApp', 'Share App')}>
               <View className="flex-row items-center">
                 <FontAwesomeIcon icon={faShareAlt} size={20} color={NW_COLORS.textPrimary} />
                 <Text className="text-base text-[#212121] ml-4 flex-1">Share the app</Text>
               </View>
             </TouchableOpacity>
-            <TouchableOpacity className="flex-row items-center justify-between bg-white rounded-xl py-3.5 px-4 mb-2 border-0" onPress={() => handleNavigation('About us')}>
+            <TouchableOpacity className="flex-row items-center justify-between bg-white rounded-xl py-3.5 px-4 mb-2 shadow-sm" onPress={() => openDetailModal('AboutUs', 'About Us')}>
               <View className="flex-row items-center">
                 <FontAwesomeIcon icon={faInfoCircle} size={20} color={NW_COLORS.textPrimary} />
                 <Text className="text-base text-[#212121] ml-4 flex-1">About us</Text>
               </View>
             </TouchableOpacity>
-           
-            <TouchableOpacity className="flex-row items-center justify-between bg-white rounded-xl py-3.5 px-4 mb-2 border-0" onPress={() => handleNavigation('Account privacy')}>
+
+            <TouchableOpacity className="flex-row items-center justify-between bg-white rounded-xl py-3.5 px-4 mb-2 shadow-sm" onPress={() => openDetailModal('AccountPrivacy', 'Account Privacy')}>
               <View className="flex-row items-center">
                 <FontAwesomeIcon icon={faLock} size={20} color={NW_COLORS.textPrimary} />
                 <Text className="text-base text-[#212121] ml-4 flex-1">Account privacy</Text>
               </View>
             </TouchableOpacity>
-            <TouchableOpacity className="flex-row items-center justify-between bg-white rounded-xl py-3.5 px-4 mb-2 border-0" onPress={() => handleNavigation('Notification preferences')}>
+            <TouchableOpacity className="flex-row items-center justify-between bg-white rounded-xl py-3.5 px-4 mb-2 shadow-sm" onPress={() => openDetailModal('NotificationPreferences', 'Notification Preferences')}>
               <View className="flex-row items-center">
                 <FontAwesomeIcon icon={faBell} size={20} color={NW_COLORS.textPrimary} />
                 <Text className="text-base text-[#212121] ml-4 flex-1">Notification preferences</Text>
               </View>
             </TouchableOpacity>
-            <TouchableOpacity className="flex-row items-center justify-between bg-white rounded-xl py-3.5 px-4 mb-2 border-0" onPress={() => Alert.alert('Log Out', 'Are you sure you want to log out?', [{ text: 'Cancel', style: 'cancel' }, { text: 'Log Out', onPress: () => console.log('User logged out') }])}>
+            <TouchableOpacity className="flex-row items-center justify-between bg-white rounded-xl py-3.5 px-4 mb-2 shadow-sm" onPress={() => Alert.alert('Log Out', 'Are you sure you want to log out?', [{ text: 'Cancel', style: 'cancel' }, { text: 'Log Out', onPress: () => console.log('User logged out') }])}>
               <View className="flex-row items-center">
                 <FontAwesomeIcon icon={faSignOutAlt} size={20} color={NW_COLORS.danger} />
                 <Text className="text-base text-red-600 ml-4 flex-1" style={{ color: NW_COLORS.danger }}>Log out</Text>
@@ -295,15 +654,46 @@ const ProfileScreen = ({ navigation }: { navigation: any }) => {
           </SafeAreaView>
         </Modal>
 
-
-        {/* No draggable bottom sheet modal here as the package is not available.
-          If you need a modal for list items, you'll need to implement a standard
-          React Native Modal component or install a dedicated library.
-          Implementing "draggable" functionality from scratch is highly complex. */}
+        {/* General Draggable Modal using react-native-modalize */}
+        <Modalize
+          ref={detailModalRef}
+          // Conditionally apply modalHeight or adjustToContentHeight
+          modalHeight={modalContentKey === 'PaymentSettings' ? screenHeight * 0.7 : undefined}
+          adjustToContentHeight={modalContentKey !== 'PaymentSettings'}
+          
+          withHandle={true} // Shows the drag handle at the top
+          handlePosition="inside" // Positions handle inside the modal
+          modalStyle={styles.modalizeContainer} // Custom styles for modal appearance
+          withReactModal={true} // Ensures proper full-screen behavior and keyboard handling
+          scrollViewProps={{ keyboardShouldPersistTaps: 'handled' }} // Prevents keyboard dismissal on tap outside input
+          HeaderComponent={
+            <View className="py-4 px-4 border-b border-gray-200 flex-row justify-between items-center">
+              <Text className="text-xl font-bold text-[#212121] flex-1 text-center">{modalTitle}</Text>
+              <TouchableOpacity onPress={() => detailModalRef.current?.close()} className="p-2">
+                <FontAwesomeIcon icon={faTimes} size={24} color={NW_COLORS.textSecondary} />
+              </TouchableOpacity>
+            </View>
+          }
+        >
+          {renderDetailModalContent()}
+        </Modalize>
 
       </SafeAreaView>
     </>
   );
 };
+
+const styles = StyleSheet.create({
+  modalizeContainer: {
+    backgroundColor: NW_COLORS.cardBackground,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    overflow: 'hidden', // Ensures content respects border radius
+  },
+  modalScrollContent: {
+    padding: 20,
+    paddingBottom: 40, // Add some bottom padding for scrollable content
+  },
+});
 
 export default ProfileScreen;

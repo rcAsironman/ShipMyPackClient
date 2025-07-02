@@ -14,8 +14,9 @@ import {
   StatusBar,
   UIManager,
   Dimensions,
+  SafeAreaView, 
 } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { IconDefinition } from '@fortawesome/fontawesome-common-types';
 import {

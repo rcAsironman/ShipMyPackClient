@@ -469,7 +469,7 @@ export default function AddTripScreen({ navigation }: { navigation: any }) {
           flexDirection: 'row',
           justifyContent: 'space-between',
           alignItems: 'center',
-          paddingTop: Platform.OS === 'android' ? (StatusBar?.currentHeight || 0) + 20 : screenHeight * 0.02,
+          paddingTop: Platform.OS === 'android' ? (StatusBar?.currentHeight || 0) : screenHeight * 0.02,
           paddingBottom: 20,
           paddingHorizontal: 16,
           backgroundColor: 'white',
@@ -481,12 +481,10 @@ export default function AddTripScreen({ navigation }: { navigation: any }) {
           zIndex: 10,
         }}
         className="shadow-md"
-      >
-       
-        <Text style={{ fontSize: 20, fontWeight: '700', color: 'black', flex: 1, textAlign: 'center' }}>
+      >  
+          <Text style={{ fontSize: 20, fontWeight: '700', color: 'black', flex: 1, textAlign: 'center' }}>
           Add Your Trip
         </Text>
-
         <View style={{ width: 24, height: 24 }} />
       </View>
 
