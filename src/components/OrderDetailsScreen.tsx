@@ -54,6 +54,12 @@ function renderStars(rating: any) {
   return stars;
 }
 
+const originalImages = [
+  { uri: 'https://images.unsplash.com/photo-1532635042-a6f6ad4745f9?q=80' },
+  { uri: 'https://images.unsplash.com/photo-1532635042-a6f6ad4745f9?q=80' },
+  { uri: 'https://images.unsplash.com/photo-1532635042-a6f6ad4745f9?q=80' },
+  // add more images here if needed
+];
 export default function OrderDetailsScreen() {
   const route = useRoute<any>();
   const navigation = useNavigation();
@@ -120,7 +126,7 @@ export default function OrderDetailsScreen() {
         <Text style={styles.orderTime}>Created on {order.date}, {order.time}</Text>
 
         <View style={styles.imageContainer}>
-          <OrderDetailsCarousel />
+          <OrderDetailsCarousel images={originalImages}/>
         </View>
 
         {/* New Image Request Section */}
@@ -193,12 +199,6 @@ export default function OrderDetailsScreen() {
             </Text>
           </TouchableOpacity>
         </View>
-
-
-
-
-
-
         <View style={styles.card}>
           <View style={styles.cardHeaderRow}>
             <Text style={styles.sectionTitle}>Transporter</Text>
@@ -369,16 +369,7 @@ const styles = StyleSheet.create({
   },
   orderTitle: { fontSize: 20, fontWeight: 'bold', color: '#333' },
   orderTime: { textAlign: 'center', color: '#666', marginBottom: 16 },
-  imageContainer: {
-    width: width - 32,
-    height: 200,
-    alignSelf: 'center',
-    borderRadius: 16,
-    overflow: 'hidden',
-    marginBottom: 16,
-    backgroundColor: '#eee',
-  },
-  image: { width: '100%', height: '100%' },
+
   card: {
     backgroundColor: '#fff',
     marginHorizontal: 16,
