@@ -1,3 +1,4 @@
+// HistoryScreen.tsx
 import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
@@ -9,8 +10,9 @@ import {
   Pressable,
   Platform,
   TouchableOpacity,
+  Image, // Added Image import as mock data now includes initialImages
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, StackActions } from '@react-navigation/native'; // Added StackActions import
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import {
@@ -21,18 +23,47 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import Svg, { Path, Circle } from 'react-native-svg';
 
-const mockOrders = Array.from({ length: 12 }, (_, i) => ({
+// --- Type Definitions ---
+// For a larger project, consider moving these to a separate file like `src/types.ts`
+// and importing them: `import { ShipmentOrder, ShipmentTab } from '../types';`
+interface ShipmentOrder {
+  id: string;
+  date: string;
+  time: string;
+  amount: number;
+  status: 'ongoing' | 'completed';
+  initialImages?: string[]; // Added for transporter's image display in details
+}
+
+type ShipmentTab = 'ongoing' | 'completed';
+// --- End Type Definitions ---
+
+// Import the TransporterOrderDetailsScreen
+// IMPORTANT: Adjust this path based on where TransporterOrderDetailsScreen.tsx is located
+// If it's in the same folder as HistoryScreen.tsx, './TransporterOrderDetailsScreen' is correct.
+import TransporterOrderDetailsScreen from './TransporterOrderDetailsScreen';
+
+// Mock data for demonstration - UPDATED to include multiple images
+const mockOrders: ShipmentOrder[] = Array.from({ length: 12 }, (_, i) => ({
   id: `ORD${10000 + i}`,
   date: '2025-06-18',
   time: '10:30 AM',
   amount: Math.floor(Math.random() * 500 + 100),
   status: i % 2 === 0 ? 'ongoing' : 'completed',
+  // Provide an array of images for some orders
+  initialImages: i % 3 === 0
+    ? [
+        `https://picsum.photos/id/${100 + i}/200/200`,
+        `https://picsum.photos/id/${101 + i}/200/200`,
+        `https://picsum.photos/id/${102 + i}/200/200`,
+      ]
+    : [], // Empty array if no images
 }));
 
 export default function HistoryScreen() {
   const navigation = useNavigation();
-  const [isSender, setIsSender] = useState(true);
-  const [tab, setTab] = useState<'ongoing' | 'completed'>('ongoing');
+  const [isSender, setIsSender] = useState<boolean>(true); // Explicitly typed
+  const [tab, setTab] = useState<ShipmentTab>('ongoing'); // Explicitly typed
   const filteredOrders = mockOrders.filter(order => order.status === tab);
   const scaleAnim = useRef(new Animated.Value(1)).current;
 
@@ -53,7 +84,19 @@ export default function HistoryScreen() {
         }),
       ])
     ).start();
-  }, []);
+  }, [scaleAnim]); // Added scaleAnim to dependencies
+
+  // --- Transporter-related useEffect for role switch ---
+  useEffect(() => {
+    // When switching roles (sender/transporter), reset the navigation stack
+    // to ensure you don't navigate back into an old screen from the previous role.
+    // 'navigation.isFocused()' ensures this only happens when HistoryScreen is active.
+    if (navigation.isFocused()) {
+      navigation.dispatch(StackActions.popToTop()); // Navigates to the very first screen in the stack
+    }
+  }, [isSender, navigation]); // Dependencies: isSender (when it changes), navigation (for stability)
+  // --- End Transporter-related useEffect ---
+
 
   return (
     <SafeAreaView className="flex-1 bg-white px-4 pt-6">
@@ -74,13 +117,15 @@ export default function HistoryScreen() {
       </View>
 
       <View className="flex-row bg-gray-100 p-1 rounded-xl mb-6">
-        {['ongoing', 'completed'].map(t => (
+        {(['ongoing', 'completed'] as ShipmentTab[]).map((t) => ( // Explicitly cast for type safety
           <Pressable
             key={t}
-            onPress={() => setTab(t as 'ongoing' | 'completed')}
+            onPress={() => setTab(t)}
             className={`flex-1 py-2 rounded-xl ${tab === t ? 'bg-[#FF5A5F]' : ''}`}
           >
-            <Text className={`text-center font-medium ${tab === t ? 'text-white' : 'text-gray-700'}`}>{t[0].toUpperCase() + t.slice(1)}</Text>
+            <Text className={`text-center font-medium ${tab === t ? 'text-white' : 'text-gray-700'}`}>
+              {t[0].toUpperCase() + t.slice(1)}
+            </Text>
           </Pressable>
         ))}
       </View>
@@ -94,7 +139,17 @@ export default function HistoryScreen() {
           <View className="bg-white rounded-2xl border border-gray-300 mb-5 shadow-md overflow-hidden">
             <Pressable
               android_ripple={{ color: '#eee' }}
-              onPress={() => navigation.navigate('OrderDetails', { order: item })}
+              onPress={() => {
+                if (isSender) {
+                  // Navigate to sender's OrderDetails screen
+                  // Using 'as any' to temporarily bypass TypeScript navigation type errors
+                  (navigation as any).navigate('OrderDetails', { order: item });
+                } else {
+                  // Navigate to the TransporterOrderDetailsScreen
+                  // Using 'as any' to temporarily bypass TypeScript navigation type errors
+                  (navigation as any).navigate('TransporterOrderDetails', { order: item });
+                }
+              }}
               className="p-4"
             >
               <View className="flex-row justify-between mb-2">
@@ -134,6 +189,7 @@ export default function HistoryScreen() {
                   icon: faMapMarkerAlt,
                   label: 'Track on Map',
                   screen: 'MapScreen',
+                  // Hide if completed or if current user is Transporter
                   hide: tab === 'completed' || !isSender,
                   color: 'green'
                 }, {
@@ -142,12 +198,13 @@ export default function HistoryScreen() {
                   screen: 'ReportIssue',
                   color: '#FF5A5F'
                 }].map(({ icon, label, screen, hide, color }) => {
-                  if (hide) return null;
+                  if (hide) return null; // Do not render the button if `hide` is true
                   return (
                     <TouchableOpacity
                       key={label}
                       activeOpacity={0.7}
-                      onPress={() => navigation.navigate(screen, { order: item })}
+                      // Using 'as any' for screen name here as well
+                      onPress={() => (navigation as any).navigate(screen, { order: item })}
                       className="items-center w-[75px]"
                     >
                       <FontAwesomeIcon icon={icon} color={color} size={20} />
