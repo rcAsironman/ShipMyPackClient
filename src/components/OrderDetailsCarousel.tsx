@@ -306,7 +306,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   imageContainer: {
-    width: ITEM_WIDTH,
+    width: width - 32,
     height: '100%', // Take full height of the wrapper
     borderRadius: 16,
     overflow: 'hidden',

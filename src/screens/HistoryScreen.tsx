@@ -86,16 +86,7 @@ export default function HistoryScreen() {
     ).start();
   }, [scaleAnim]); // Added scaleAnim to dependencies
 
-  // --- Transporter-related useEffect for role switch ---
-  useEffect(() => {
-    // When switching roles (sender/transporter), reset the navigation stack
-    // to ensure you don't navigate back into an old screen from the previous role.
-    // 'navigation.isFocused()' ensures this only happens when HistoryScreen is active.
-    if (navigation.isFocused()) {
-      navigation.dispatch(StackActions.popToTop()); // Navigates to the very first screen in the stack
-    }
-  }, [isSender, navigation]); // Dependencies: isSender (when it changes), navigation (for stability)
-  // --- End Transporter-related useEffect ---
+ 
 
 
   return (
