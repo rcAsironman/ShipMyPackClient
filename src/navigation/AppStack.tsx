@@ -8,6 +8,8 @@ import NotificationDetailScreen from '../screens/NotificationDetailScreen';
 import SupportScreen from '../screens/SupportScreen';
 import TransporterOngoing from '../screens/TransporterOngoing';
 import TransporterCompleted from '../screens/TransporterCompleted';
+import SenderOngoing from '../screens/SenderOngoing';
+import SenderCompleted from '../screens/SenderCompleted';
 
 const Stack = createNativeStackNavigator();
 
@@ -16,12 +18,13 @@ export default function AppStack() {
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="MainTabs" component={MainTabs} />
       <Stack.Screen name="MapScreen" component={MapScreen} />
-      <Stack.Screen name="OrderDetails" component={OrderDetailsScreen} />
       <Stack.Screen name="NotificationScreen" component={NotificationScreen} />
       <Stack.Screen name="NotificationDetail" component={NotificationDetailScreen} />
       <Stack.Screen name="SupportScreen" component={SupportScreen} />
       <Stack.Screen name="TransporterOngoing" component={TransporterOngoing}/>
       <Stack.Screen name="TransporterCompleted" component={TransporterCompleted}/>
+      <Stack.Screen name="SenderOngoing" component={SenderOngoing}/>
+      <Stack.Screen name="SenderCompleted" component={SenderCompleted}/>
       {/* Add more non-tab screens here */}
     </Stack.Navigator>
   );

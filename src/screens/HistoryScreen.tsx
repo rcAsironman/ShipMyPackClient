@@ -160,7 +160,12 @@ export default function HistoryScreen() {
               android_ripple={{ color: '#eee' }}
               onPress={() => {
                 if (isSender) {
-                  (navigation as any).navigate('OrderDetails', { order: item });
+                  if (tab === 'ongoing') {
+                    (navigation as any).navigate('SenderOngoing', { orderId: 1 });
+                  } else {
+                    // Pass the complete item directly to TransporterCompleted
+                    (navigation as any).navigate('SenderCompleted', { orderId: 1 });
+                  }
                 } else {
                   if (tab === 'ongoing') {
                     (navigation as any).navigate('TransporterOngoing', { order: item });
