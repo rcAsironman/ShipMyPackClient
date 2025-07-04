@@ -1,4 +1,3 @@
-// HistoryScreen.tsx
 import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
@@ -10,9 +9,9 @@ import {
   Pressable,
   Platform,
   TouchableOpacity,
-  Image, // Added Image import as mock data now includes initialImages
+  Image,
 } from 'react-native';
-import { useNavigation, StackActions } from '@react-navigation/native'; // Added StackActions import
+import { useNavigation, StackActions } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import {
@@ -24,46 +23,78 @@ import {
 import Svg, { Path, Circle } from 'react-native-svg';
 
 // --- Type Definitions ---
-// For a larger project, consider moving these to a separate file like `src/types.ts`
-// and importing them: `import { ShipmentOrder, ShipmentTab } from '../types';`
+// IMPORTANT: Keep these type definitions consistent across files if possible,
+// or consider moving them to a shared types file (e.g., `src/types/index.ts`)
 interface ShipmentOrder {
   id: string;
   date: string;
   time: string;
-  amount: number;
+  amount: number; // Total order amount (general)
   status: 'ongoing' | 'completed';
-  initialImages?: string[]; // Added for transporter's image display in details
+  initialImages?: string[]; // Images for the carousel
+
+  // NEW: Add all fields expected by TransporterCompletedScreen
+  shipmentAmount: number; // Amount specific to this shipment
+  earnedAmount?: number; // Earnings for transporter, only for completed orders
+  startPoint: string;
+  destination: string;
+  senderName: string;
+  senderPhone: string;
+  senderGender: string;
+  receiverName: string;
+  receiverPhone: string;
+  receiverGender: string;
+  senderRating: number;
 }
 
 type ShipmentTab = 'ongoing' | 'completed';
 // --- End Type Definitions ---
 
-// Import the TransporterOrderDetailsScreen
-// IMPORTANT: Adjust this path based on where TransporterOrderDetailsScreen.tsx is located
-// If it's in the same folder as HistoryScreen.tsx, './TransporterOrderDetailsScreen' is correct.
-import TransporterOrderDetailsScreen from './TransporterOrderDetailsScreen';
+// IMPORTANT: Adjust these paths based on your project structure
+import TransporterOngoingScreen from './TransporterOngoing';
+import TransporterCompletedScreen from './TransporterCompleted';
 
-// Mock data for demonstration - UPDATED to include multiple images
-const mockOrders: ShipmentOrder[] = Array.from({ length: 12 }, (_, i) => ({
-  id: `ORD${10000 + i}`,
-  date: '2025-06-18',
-  time: '10:30 AM',
-  amount: Math.floor(Math.random() * 500 + 100),
-  status: i % 2 === 0 ? 'ongoing' : 'completed',
-  // Provide an array of images for some orders
-  initialImages: i % 3 === 0
-    ? [
-        `https://picsum.photos/id/${100 + i}/200/200`,
-        `https://picsum.photos/id/${101 + i}/200/200`,
-        `https://picsum.photos/id/${102 + i}/200/200`,
-      ]
-    : [], // Empty array if no images
-}));
+// --- UPDATED Mock data for demonstration ---
+// This mock data now includes ALL the details that TransporterCompletedScreen expects.
+const mockOrders: ShipmentOrder[] = Array.from({ length: 12 }, (_, i) => {
+  const status = i % 2 === 0 ? 'ongoing' : 'completed';
+  const hasImages = i % 3 !== 0; // Ensure some have images, others don't for variety
+  const baseId = 10000 + i;
+
+  return {
+    id: `ORD${baseId}`,
+    date: '2025-06-18',
+    time: '10:30 AM',
+    amount: Math.floor(Math.random() * 500 + 100), // General order value
+    status: status,
+    initialImages: hasImages
+      ? [
+          `https://picsum.photos/id/${baseId}/200/200`,
+          `https://picsum.photos/id/${baseId + 1}/200/200`,
+          `https://picsum.photos/id/${baseId + 2}/200/200`,
+        ]
+      : [],
+    // --- Detailed properties for Transporter screens ---
+    shipmentAmount: 150 + (i * 10), // Specific payment for the transporter for this shipment
+    earnedAmount: status === 'completed' ? 200 + (i * 5) : undefined, // Only earned if completed
+    startPoint: i % 3 === 0 ? 'Hyderabad, Telangana' : (i % 3 === 1 ? 'Delhi, India' : 'Mumbai, Maharashtra'),
+    destination: i % 3 === 0 ? 'Bangalore, Karnataka' : (i % 3 === 1 ? 'Chennai, Tamil Nadu' : 'Kolkata, West Bengal'),
+    senderName: `Sender ${i + 1}`,
+    senderPhone: `+91 98765 432${String(10 + i).padStart(2, '0')}`,
+    senderGender: i % 2 === 0 ? 'Male' : 'Female',
+    receiverName: `Receiver ${i + 1}`,
+    receiverPhone: `+91 87654 321${String(10 + i).padStart(2, '0')}`,
+    receiverGender: i % 2 === 0 ? 'Female' : 'Male',
+    senderRating: parseFloat(((3.5 + (i * 0.1)) > 5 ? 5 : (3.5 + (i * 0.1))).toFixed(1)),
+  };
+});
+// --- End UPDATED Mock data ---
+
 
 export default function HistoryScreen() {
   const navigation = useNavigation();
-  const [isSender, setIsSender] = useState<boolean>(true); // Explicitly typed
-  const [tab, setTab] = useState<ShipmentTab>('ongoing'); // Explicitly typed
+  const [isSender, setIsSender] = useState<boolean>(true);
+  const [tab, setTab] = useState<ShipmentTab>('ongoing');
   const filteredOrders = mockOrders.filter(order => order.status === tab);
   const scaleAnim = useRef(new Animated.Value(1)).current;
 
@@ -71,7 +102,7 @@ export default function HistoryScreen() {
     Animated.loop(
       Animated.sequence([
         Animated.timing(scaleAnim, {
-          toValue: 1.5,
+          toValue: 1.1, // Slightly less aggressive scale for loop
           duration: 700,
           easing: Easing.inOut(Easing.ease),
           useNativeDriver: true,
@@ -84,10 +115,7 @@ export default function HistoryScreen() {
         }),
       ])
     ).start();
-  }, [scaleAnim]); // Added scaleAnim to dependencies
-
- 
-
+  }, [scaleAnim]);
 
   return (
     <SafeAreaView className="flex-1 bg-white px-4 pt-6">
@@ -108,7 +136,7 @@ export default function HistoryScreen() {
       </View>
 
       <View className="flex-row bg-gray-100 p-1 rounded-xl mb-6">
-        {(['ongoing', 'completed'] as ShipmentTab[]).map((t) => ( // Explicitly cast for type safety
+        {(['ongoing', 'completed'] as ShipmentTab[]).map((t) => (
           <Pressable
             key={t}
             onPress={() => setTab(t)}
@@ -132,13 +160,14 @@ export default function HistoryScreen() {
               android_ripple={{ color: '#eee' }}
               onPress={() => {
                 if (isSender) {
-                  // Navigate to sender's OrderDetails screen
-                  // Using 'as any' to temporarily bypass TypeScript navigation type errors
                   (navigation as any).navigate('OrderDetails', { order: item });
                 } else {
-                  // Navigate to the TransporterOrderDetailsScreen
-                  // Using 'as any' to temporarily bypass TypeScript navigation type errors
-                  (navigation as any).navigate('TransporterOrderDetails', { order: item });
+                  if (tab === 'ongoing') {
+                    (navigation as any).navigate('TransporterOngoing', { order: item });
+                  } else {
+                    // Pass the complete item directly to TransporterCompleted
+                    (navigation as any).navigate('TransporterCompleted', { order: item });
+                  }
                 }
               }}
               className="p-4"
@@ -180,7 +209,6 @@ export default function HistoryScreen() {
                   icon: faMapMarkerAlt,
                   label: 'Track on Map',
                   screen: 'MapScreen',
-                  // Hide if completed or if current user is Transporter
                   hide: tab === 'completed' || !isSender,
                   color: 'green'
                 }, {
@@ -189,12 +217,11 @@ export default function HistoryScreen() {
                   screen: 'ReportIssue',
                   color: '#FF5A5F'
                 }].map(({ icon, label, screen, hide, color }) => {
-                  if (hide) return null; // Do not render the button if `hide` is true
+                  if (hide) return null;
                   return (
                     <TouchableOpacity
                       key={label}
                       activeOpacity={0.7}
-                      // Using 'as any' for screen name here as well
                       onPress={() => (navigation as any).navigate(screen, { order: item })}
                       className="items-center w-[75px]"
                     >
