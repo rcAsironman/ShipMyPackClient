@@ -96,7 +96,7 @@ export default function TransporterOrderDetailsScreen({ navigation }: { navigati
             date: '2023-10-26',
             time: '14:30',
             amount: 1500,
-            status: 'ongoing',
+            status: 'completed',
             initialImages: [
                 'https://images.unsplash.com/photo-1532635042-a6f6ad4745f9?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
                 'https://images.unsplash.com/photo-1579726038234-5e608031d75c?q=80&w=1935&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB4uNzVjfDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
@@ -560,59 +560,68 @@ export default function TransporterOrderDetailsScreen({ navigation }: { navigati
                 <Text style={styles.orderTime}>Created on {order.date}, {order.time}</Text>
 
                 {/* Integrated Carousel Component for initial images */}
-                <View style={styles.carouselWrapperStyle}>
-                    <OrderDetailsCarousel images={convertImageUrisToCarouselItems(order.initialImages)} />
-                </View>
+                {order.initialImages && order.initialImages.length > 0 ? (
+                    <View style={styles.carouselWrapperStyle}>
+                        <OrderDetailsCarousel images={convertImageUrisToCarouselItems(order.initialImages)} />
+                    </View>
+                ) : (
+                    <View style={styles.carouselWrapperStyle}>
+                        <Text style={{ textAlign: 'center', color: '#666', padding: 20 }}>No images available for this order.</Text>
+                    </View>
+                )}
+
 
                 {/* Requested Images Upload Section - ALWAYS VISIBLE */}
-                <View style={styles.card}>
-                    <Text style={styles.sectionTitle}>Requested Images Upload</Text>
-                    {/* Ensure 'pending requests' and other text is wrapped in Text components */}
-                    <Text style={styles.infoText}>
-                        You have <Text style={{ fontWeight: 'bold' }}>{imageRequestsCount} pending requests</Text> for images from the sender. Please upload them here.
-                    </Text>
-                    <TouchableOpacity
-                        style={styles.uploadButton}
-                        onPress={handleImageUploadButton}
-                    >
-                        <FontAwesomeIcon icon={faUpload} size={20} color="#FFFFFF" style={{ marginRight: 8 }} />
-                        <Text style={styles.uploadButtonText}>Upload Image</Text>
-                    </TouchableOpacity>
+                {
+                    order.status === 'ongoing' && (<View style={styles.card}>
+                        <Text style={styles.sectionTitle}>Requested Images Upload</Text>
+                        {/* Ensure 'pending requests' and other text is wrapped in Text components */}
+                        <Text style={styles.infoText}>
+                            You have <Text style={{ fontWeight: 'bold' }}>{imageRequestsCount} pending requests</Text> for images from the sender. Please upload them here.
+                        </Text>
+                        <TouchableOpacity
+                            style={styles.uploadButton}
+                            onPress={handleImageUploadButton}
+                        >
+                            <FontAwesomeIcon icon={faUpload} size={20} color="#FFFFFF" style={{ marginRight: 8 }} />
+                            <Text style={styles.uploadButtonText}>Upload Image</Text>
+                        </TouchableOpacity>
 
-                    {uploadedImages.length > 0 && (
-                        <View style={styles.uploadedImagesContainer}>
-                            <Text style={styles.uploadedImagesTitle}>Images Sent by You:</Text>
-                            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.uploadedImagesScrollView}>
-                                {uploadedImages.map((item, index) => (
-                                    <TouchableOpacity // Make the image clickable
-                                        key={index}
-                                        style={styles.uploadedImageWrapper}
-                                        onPress={() => openFullScreenImage(item.displayUri)}
-                                    >
-                                        <Image
-                                            source={{ uri: item.displayUri }}
-                                            style={styles.uploadedImage}
-                                            resizeMode="cover"
-                                            onError={(e) => console.error('Uploaded media load error:', e.nativeEvent.error, 'URI:', item.displayUri)}
-                                        />
-                                        {item.type === 'video' && (
-                                            <View style={styles.videoOverlay}>
-                                                <FontAwesomeIcon icon={faPlayCircle} size={24} color="#fff" />
-                                            </View>
-                                        )}
-                                    </TouchableOpacity>
-                                ))}
-                            </ScrollView>
-                        </View>
-                    )}
-                </View>
+                        {uploadedImages.length > 0 && (
+                            <View style={styles.uploadedImagesContainer}>
+                                <Text style={styles.uploadedImagesTitle}>Images Sent by You:</Text>
+                                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.uploadedImagesScrollView}>
+                                    {uploadedImages.map((item, index) => (
+                                        <TouchableOpacity // Make the image clickable
+                                            key={index}
+                                            style={styles.uploadedImageWrapper}
+                                            onPress={() => openFullScreenImage(item.displayUri)}
+                                        >
+                                            <Image
+                                                source={{ uri: item.displayUri }}
+                                                style={styles.uploadedImage}
+                                                resizeMode="cover"
+                                                onError={(e) => console.error('Uploaded media load error:', e.nativeEvent.error, 'URI:', item.displayUri)}
+                                            />
+                                            {item.type === 'video' && (
+                                                <View style={styles.videoOverlay}>
+                                                    <FontAwesomeIcon icon={faPlayCircle} size={24} color="#fff" />
+                                                </View>
+                                            )}
+                                        </TouchableOpacity>
+                                    ))}
+                                </ScrollView>
+                            </View>
+                        )}
+                    </View>)
+                }
 
-                {/* Transporter Details - ALWAYS RENDERED, but masked if not verified */}
+                {/* receiver Details - ALWAYS RENDERED, but masked if not verified */}
                 <View style={styles.card}>
                     <View style={styles.cardHeaderRow}>
-                        <Text style={styles.sectionTitle}>Transporter</Text>
-                        <TouchableOpacity style={styles.sosIcon}>
-                            <FontAwesomeIcon icon={faShieldAlt} size={18} color="red" />
+                        <Text style={styles.sectionTitle}>Sender</Text>
+                        <TouchableOpacity style={styles.sosIcon} disabled={!isOtpVerifiedForAccess && order.status === 'completed'}>
+                            <FontAwesomeIcon icon={faShieldAlt} size={18} color={isOtpVerifiedForAccess ? "#FF5A5F" : "#CCC"} />
                             <Text style={{ fontSize: 10, color: 'red', marginTop: 2 }}>SOS</Text>
                         </TouchableOpacity>
                     </View>
@@ -620,7 +629,7 @@ export default function TransporterOrderDetailsScreen({ navigation }: { navigati
                         <Image source={{ uri: 'https://randomuser.me/api/portraits/men/32.jpg' }} style={styles.transporterImage} />
                         <View>
                             <Text style={styles.infoTextBold}>
-                                {isOtpVerifiedForAccess ? `${transporterName} (ID: TR1234)` : 'xxxxxxxx (ID: TRxxxx)'}
+                                {isOtpVerifiedForAccess || order.status === 'completed' ? `${transporterName} (ID: TR1234)` : 'xxxxxxxx (ID: TRxxxx)'}
                             </Text>
                             <Text style={styles.infoText}>
                                 Phone: {isOtpVerifiedForAccess ? transporterPhone : 'xxxxxxxxxx'}
@@ -631,10 +640,10 @@ export default function TransporterOrderDetailsScreen({ navigation }: { navigati
                             </View>
                             {/* Disable icons if not verified */}
                             <View style={styles.transporterIcons}>
-                                <TouchableOpacity style={[styles.iconButton, { marginRight: 12 }]} disabled={!isOtpVerifiedForAccess}>
+                                <TouchableOpacity style={[styles.iconButton, { marginRight: 12 }]} disabled={!isOtpVerifiedForAccess && order.status === 'completed'}>
                                     <FontAwesomeIcon icon={faComments} size={20} color={isOtpVerifiedForAccess ? "#FF5A5F" : "#CCC"} />
                                 </TouchableOpacity>
-                                <TouchableOpacity style={styles.iconButton} disabled={!isOtpVerifiedForAccess}>
+                                <TouchableOpacity style={styles.iconButton} disabled={!isOtpVerifiedForAccess && order.status === 'completed'}>
                                     <FontAwesomeIcon icon={faPhone} size={20} color={isOtpVerifiedForAccess ? "#FF5A5F" : "#CCC"} />
                                 </TouchableOpacity>
                             </View>
@@ -702,72 +711,78 @@ export default function TransporterOrderDetailsScreen({ navigation }: { navigati
                     <View style={styles.card}>
                         <Text style={styles.sectionTitle}>Sender Details</Text>
                         <Text style={styles.infoText}>Name: {senderName}</Text>
-                        <Text style={styles.infoText}>Phone: {senderPhone}</Text>
-                        <Text style={styles.infoText}>Gender: {senderGender}</Text>
-                        <View style={styles.accessPrompt}>
-                            <FontAwesomeIcon icon={faLock} size={18} color="#FF5A5F" style={{ marginRight: 8 }} />
-                            <Text style={styles.accessPromptText}>
-                                Enter OTP to access full order details
-                            </Text>
-                        </View>
+                        <Text style={styles.infoText}>Phone: {isOtpVerifiedForAccess && order.status === 'ongoing' ? `${senderPhone}` : '********'} </Text>
+                        <Text style={styles.infoText}>Gender: {isOtpVerifiedForAccess && order.status === 'ongoing' ? `${senderGender}` : '********'}</Text>
+                        {
+                            order.status === 'ongoing' && (
+                                <View style={styles.accessPrompt}>
+                                    <FontAwesomeIcon icon={faLock} size={18} color="#FF5A5F" style={{ marginRight: 8 }} />
+                                    <Text style={styles.accessPromptText}>
+                                        Enter OTP to access full order details
+                                    </Text>
+                                </View>
+                            )
+                        }
                     </View>
                 )}
             </ScrollView>
 
-            {/* OTP Modal (Centered) */}
-            <Modal
-                animationType="fade"
-                transparent={true}
-                // The modal is visible if otpInputVisible is true (for sender OTP)
-                // OR if otpForDeliveryVisible is true (for delivery OTP).
-                // Initial sender OTP modal only shows if !isOtpVerifiedForAccess.
-                visible={(otpInputVisible && !isOtpVerifiedForAccess) || otpForDeliveryVisible}
-                onRequestClose={handleGoBack}
-            >
-                {/* This TouchableWithoutFeedback handles taps on the semi-transparent background to dismiss keyboard */}
-                <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
-                    {/* Changed modalOverlay to be fully opaque for privacy */}
-                    <View style={styles.modalOverlay}>
-                        {/* This inner TouchableWithoutFeedback ensures that taps *on the modal content* don't dismiss the keyboard,
-                            allowing interaction with buttons/text inputs. */}
-                        <TouchableWithoutFeedback>
-                            {/* The ScrollView makes the content scrollable if it overflows.
-                                Its contentContainerStyle helps control the inner layout and size. */}
-                            <ScrollView
-                                style={styles.modalScrollView}
-                                contentContainerStyle={styles.modalContentContainer}
-                                keyboardShouldPersistTaps="handled" // Important for inputs within scrollview
-                            >
-                                <View style={styles.modalContent}>
-                                    <Text style={styles.modalTitle}>
-                                    {otpInputVisible ? 'Enter Sender OTP' : 'Enter Delivery OTP'}
-                                    </Text>
-                                    <Text style={styles.modalDescription}>A 4-digit OTP has been sent to the {otpInputVisible ? 'sender' : 'receiver'}'s phone number.</Text>
-                                    {renderOtpInputs()}
-                                    {isLoadingOtp ? (
-                                        <ActivityIndicator size="small" color="#FF5A5F" style={{ marginTop: 10 }} />
-                                    ) : (
-                                        otpError && <Text style={styles.errorText}>{otpError}</Text>
-                                    )}
-                                    <TouchableOpacity
-                                        style={styles.verifyButton}
-                                        onPress={otpInputVisible ? handleAccessOtpVerification : handleDeliveryOtpVerification}
-                                        disabled={isLoadingOtp}
+            {
+                order.status === 'ongoing' && (
+                    <Modal
+                        animationType="fade"
+                        transparent={true}
+                        // The modal is visible if otpInputVisible is true (for sender OTP)
+                        // OR if otpForDeliveryVisible is true (for delivery OTP).
+                        // Initial sender OTP modal only shows if !isOtpVerifiedForAccess.
+                        visible={(otpInputVisible && !isOtpVerifiedForAccess) || otpForDeliveryVisible}
+                        onRequestClose={handleGoBack}
+                    >
+                        {/* This TouchableWithoutFeedback handles taps on the semi-transparent background to dismiss keyboard */}
+                        <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
+                            {/* Changed modalOverlay to be fully opaque for privacy */}
+                            <View style={styles.modalOverlay}>
+                                {/* This inner TouchableWithoutFeedback ensures that taps *on the modal content* don't dismiss the keyboard,
+                                allowing interaction with buttons/text inputs. */}
+                                <TouchableWithoutFeedback>
+                                    {/* The ScrollView makes the content scrollable if it overflows.
+                                    Its contentContainerStyle helps control the inner layout and size. */}
+                                    <ScrollView
+                                        style={styles.modalScrollView}
+                                        contentContainerStyle={styles.modalContentContainer}
+                                        keyboardShouldPersistTaps="handled" // Important for inputs within scrollview
                                     >
-                                    <Text style={styles.verifyButtonText}>Verify OTP</Text>
-                                    </TouchableOpacity>
-                                    <TouchableOpacity
-                                        style={styles.cancelButton}
-                                        onPress={handleGoBack}
-                                    >
-                                    <Text style={styles.cancelButtonText}>Cancel</Text>
-                                    </TouchableOpacity>
-                                </View>
-                            </ScrollView>
+                                        <View style={styles.modalContent}>
+                                            <Text style={styles.modalTitle}>
+                                                {otpInputVisible ? 'Enter Sender OTP' : 'Enter Delivery OTP'}
+                                            </Text>
+                                            <Text style={styles.modalDescription}>A 4-digit OTP has been sent to the {otpInputVisible ? 'sender' : 'receiver'}'s phone number.</Text>
+                                            {renderOtpInputs()}
+                                            {isLoadingOtp ? (
+                                                <ActivityIndicator size="small" color="#FF5A5F" style={{ marginTop: 10 }} />
+                                            ) : (
+                                                otpError && <Text style={styles.errorText}>{otpError}</Text>
+                                            )}
+                                            <TouchableOpacity
+                                                style={styles.verifyButton}
+                                                onPress={otpInputVisible ? handleAccessOtpVerification : handleDeliveryOtpVerification}
+                                                disabled={isLoadingOtp}
+                                            >
+                                                <Text style={styles.verifyButtonText}>Verify OTP</Text>
+                                            </TouchableOpacity>
+                                            <TouchableOpacity
+                                                style={styles.cancelButton}
+                                                onPress={handleGoBack}
+                                            >
+                                                <Text style={styles.cancelButtonText}>Cancel</Text>
+                                            </TouchableOpacity>
+                                        </View>
+                                    </ScrollView>
+                                </TouchableWithoutFeedback>
+                            </View>
                         </TouchableWithoutFeedback>
-                    </View>
-                </TouchableWithoutFeedback>
-            </Modal>
+                    </Modal>)
+            }
 
             {/* Attachment Options Modal (Bottom Sheet Style) */}
             <Modal
