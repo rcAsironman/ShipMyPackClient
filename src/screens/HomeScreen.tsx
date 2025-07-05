@@ -103,6 +103,7 @@ const HomeScreen = ({ navigation }: { navigation: any }) => {
               alignItems: 'center',
             }}
             className="bg-airbnb-primary"
+            onPress={() => {navigation.navigate('ShipNowScreen'); setShowAd(true);}}
           >
             <Text style={{ color: 'white', fontSize: 16, fontWeight: '600' }}>Ship Now</Text>
           </TouchableOpacity>
