@@ -1,19 +1,70 @@
-import React, { useState } from 'react';
-import { StatusBar, View, Text, Image, TouchableOpacity, ScrollView, Dimensions, Platform, Animated } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { StatusBar, View, Text, Image, TouchableOpacity, ScrollView, Dimensions, Platform, Animated, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import ImageCarousel from '../components/ImageCarousel';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome'
 import { faHeadset, height } from '@fortawesome/free-solid-svg-icons/faHeadset'
 import { faBell } from '@fortawesome/free-solid-svg-icons';
-
 import AdvertisementPopup from '../components/AdvertisementPopup';
+import axios from 'axios';
+import { ENDPOINTS } from '../constants/constants';
+import { useSocket } from '../context/SocketProvider';
+// import AvailableShipments from '../components/AvailableShipments';
+
 const { width } = Dimensions.get('window');
+
+
+interface CarouselItem {
+  id: number;
+  uri: string;
+}
 
 // Carousel configuration
 const HomeScreen = ({ navigation }: { navigation: any }) => {
+  const socket = useSocket();
   const userName = 'Karthik';
   const earnings = 1234;
   const [showAd, setShowAd] = useState(false);
+  const [carouselImages, setCarouselImages] = useState<CarouselItem[]>([]);
+
+
+  const fetchCarouselData = async () => {
+    try {
+      const response = await axios.get(ENDPOINTS.CAROUSEL); // Replace with your API endpoint
+      console.log('Carousel data fetched:', response.data);
+      // Handle the carousel data as needed
+      const images = response.data.map((item: any) => ({ id:item.id,uri: item.image_url }));
+      setCarouselImages(images);
+
+    }
+    catch (error) {
+      console.error('Error fetching carousel data:', error);
+      Alert.alert('Error', 'Failed to load carousel data. Please try again later.');
+    }
+  }
+
+  const handleCarouselCreate = (data: any) => {
+    setCarouselImages(prevImages => [
+      ...prevImages,
+      { id: data.data.id, uri: data.data.image_url }  // ✅ append the new image
+    ]);
+  };
+
+  const handleCarouselDelete = (data: any) => {
+    setCarouselImages(prevImages => prevImages.filter(image => image.id !== data.data.id)); // ✅ remove the deleted image
+  }
+ 
+
+  useEffect(() => {
+    fetchCarouselData(); // Initial fetch only
+
+    socket.on('carouselCreate', handleCarouselCreate);
+    socket.on('carouselDeleted',handleCarouselDelete);
+    return () => {
+      socket.off('carouselCreate', handleCarouselCreate);
+    };
+  }, []);
+  
 
   return (
     <>
@@ -87,7 +138,14 @@ const HomeScreen = ({ navigation }: { navigation: any }) => {
           </View>
 
           {/* Carousel */}
-          <ImageCarousel />
+          {carouselImages?.length > 0 ? (
+            <ImageCarousel imagesData={carouselImages}/>
+          ) : (
+            <View style={{ height: 0, justifyContent: 'center', alignItems: 'center' }}>
+             
+            </View>
+          )}
+
 
 
           {/* Ship Now Section */}
@@ -103,10 +161,12 @@ const HomeScreen = ({ navigation }: { navigation: any }) => {
               alignItems: 'center',
             }}
             className="bg-airbnb-primary"
-            onPress={() => {navigation.navigate('ShipNowScreen'); setShowAd(true);}}
+            onPress={() => { navigation.navigate('ShipNowScreen'); setShowAd(true); }}
           >
             <Text style={{ color: 'white', fontSize: 16, fontWeight: '600' }}>Ship Now</Text>
           </TouchableOpacity>
+
+
 
           <View className='mt-[52px]'>
             <Text style={{ fontSize: 68, fontWeight: '800' }} className='text-gray-200'>Love  ❤️</Text>

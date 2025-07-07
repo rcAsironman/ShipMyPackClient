@@ -6,9 +6,14 @@ import React from 'react';
 import RootNavigator from './src/navigation/RootNavigator';
 import './global.css';                 // ✅ for NativeWind v4
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { SocketProvider } from './src/context/SocketProvider';
 
 export default function App() {
-  return <GestureHandlerRootView style={{ flex: 1 }}>
-    <RootNavigator />
-  </GestureHandlerRootView>;
+  return (
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <SocketProvider>
+        <RootNavigator />
+        </SocketProvider>
+      </GestureHandlerRootView>
+  );
 }

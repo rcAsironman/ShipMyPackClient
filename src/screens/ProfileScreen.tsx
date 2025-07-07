@@ -14,6 +14,7 @@ import {
   StyleSheet,
   TextInput,
   KeyboardAvoidingView,
+  PermissionsAndroid, // Added for permission handling, similar to TransporterOngoing.tsx
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
@@ -32,8 +33,9 @@ import {
   faQrcode, // For UPI ID
   faTrashAlt, // For delete
 } from '@fortawesome/free-solid-svg-icons';
-import { pick, types, isCancel, DocumentPickerResponse } from '@react-native-documents/picker';
+// Removed: import { pick, types, isCancel, DocumentPickerResponse } from '@react-native-documents/picker';
 import { Modalize } from 'react-native-modalize';
+import { launchImageLibrary, launchCamera, Asset } from 'react-native-image-picker'; // Keep launchCamera as it might be useful in the future, even if not directly used now for profile pic
 
 // Get screen dimensions for responsive layout and full-screen modal
 const { height: screenHeight, width: screenWidth } = Dimensions.get('window');
@@ -78,7 +80,8 @@ const initialPaymentMethods: PaymentMethod[] = [
 const ProfileScreen = ({ navigation }: { navigation: any }) => {
   const insets = useSafeAreaInsets();
   const [imagePreviewModalVisible, setImagePreviewModalVisible] = useState(false);
-  const [currentProfilePictureUri, setCurrentProfilePictureUri] = useState('https://media.licdn.com/dms/image/v2/C5603AQGaffS4u7szjw/profile-displayphoto-shrink_200_200/profile-displayphoto-shrink_200_200/0/1621060030088?e=2147483647&v=beta&t=vE1XuR7uG5YbHzLltK4hu96nm5SwU486qnIGrijGzek');
+  // Initialize with a default profile picture or keep it empty if dynamic
+  const [currentProfilePictureUri, setCurrentProfilePictureUri] = useState(''); // Example default image
 
   const detailModalRef = useRef<Modalize>(null);
   const [modalContentKey, setModalContentKey] = useState('');
@@ -104,24 +107,73 @@ const ProfileScreen = ({ navigation }: { navigation: any }) => {
     setImagePreviewModalVisible(false);
   };
 
+  // Function to request read permissions for images/videos
+  const requestMediaPermissions = async () => {
+    if (Platform.OS === 'android') {
+      const apiLevel = Platform.Version;
+
+      const READ_EXTERNAL_STORAGE =
+        PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE;
+      const READ_MEDIA_IMAGES =
+        PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES;
+      const READ_MEDIA_VIDEO =
+        PermissionsAndroid.PERMISSIONS.READ_MEDIA_VIDEO;
+
+      const permissions =
+        apiLevel >= 33
+          ? [READ_MEDIA_IMAGES, READ_MEDIA_VIDEO]
+          : [READ_EXTERNAL_STORAGE];
+
+      try {
+        const granted = await PermissionsAndroid.requestMultiple(permissions);
+        const allPermissionsGranted = Object.values(granted).every(
+          status => status === PermissionsAndroid.RESULTS.GRANTED,
+        );
+
+        if (!allPermissionsGranted) {
+          Alert.alert(
+            'Permission Denied',
+            'Storage permission is required to select images.',
+          );
+          return false;
+        }
+      } catch (err) {
+        console.warn(err);
+        Alert.alert('Permission Error', 'Failed to request permissions.');
+        return false;
+      }
+    }
+    return true;
+  };
+
   const handleEditImage = async () => {
+    const hasPermission = await requestMediaPermissions();
+    if (!hasPermission) {
+      return;
+    }
+
     try {
-      const [file]: DocumentPickerResponse[] = await pick({
-        type: [types.images],
-        copyTo: 'cachesDirectory',
+      const result = await launchImageLibrary({
+        mediaType: 'photo', // Only allow photos
+        quality: 0.7,
+        selectionLimit: 1, // Only allow picking one image
       });
 
-      if (file) {
-        setCurrentProfilePictureUri(file.uri);
-        setImagePreviewModalVisible(false);
+      if (result.didCancel) {
+        console.log('User cancelled image selection');
+      } else if (result.errorCode) {
+        console.error('ImagePicker Error: ', result.errorMessage);
+        Alert.alert('Error', `Failed to pick image: ${result.errorMessage}. Please try again.`);
+      } else if (result.assets && result.assets.length > 0) {
+        const selectedImageUri = result.assets[0].uri;
+        if (selectedImageUri) {
+          setCurrentProfilePictureUri(selectedImageUri);
+          setImagePreviewModalVisible(false); // Close the preview modal after selection
+        }
       }
     } catch (err) {
-      if (isCancel(err)) {
-        console.log('User cancelled image selection');
-      } else {
-        console.error('DocumentPicker Error:', err);
-        Alert.alert('Error', 'Failed to pick image. Please try again.');
-      }
+      console.error('ImagePicker Error:', err);
+      Alert.alert('Error', 'Failed to pick image. Please try again.');
     }
   };
 
@@ -499,31 +551,31 @@ const ProfileScreen = ({ navigation }: { navigation: any }) => {
         <StatusBar backgroundColor="white" barStyle="dark-content" />
         {/* FIXED HEADER - Styled to match HomeScreen header */}
         <View
-          style={{
-            flexDirection: 'row',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            paddingTop: Platform.OS === 'android' ? (StatusBar?.currentHeight || 0) : insets.top + 10,
-            paddingBottom: 20,
-            paddingHorizontal: 16,
-            backgroundColor: 'white',
-            elevation: 5,
-            shadowColor: '#000',
-            shadowOffset: { width: 0, height: 5 },
-            shadowOpacity: 0.1,
-            shadowRadius: 3,
-            zIndex: 10,
-          }}
-          className="shadow-md"
-        >
-          <Text style={{ fontSize: 20, fontWeight: '700', color: 'black', flex: 1, textAlign: 'center' }}>
-            Profile
-          </Text>
-        </View>
+        style={{
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          paddingTop: Platform.OS === 'android' ? (StatusBar?.currentHeight || 0) : screenHeight * 0.02,
+          paddingBottom: 20,
+          paddingHorizontal: 16,
+          backgroundColor: 'white',
+          elevation: 5,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 5 },
+          shadowOpacity: 0.1,
+          shadowRadius: 3,
+          zIndex: 10,
+        }}
+        className="shadow-md"
+      >
+         <Text style={{ fontSize: 20, fontWeight: '700', color: 'black', flex: 1, textAlign: 'center' }}>
+          Profile
+        </Text>
+      </View>
 
         <ScrollView
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: insets.bottom + 20 }}
+          contentContainerStyle={{ paddingBottom: insets.bottom + 100 }}
         >
           {/* Your account section */}
           <View className="px-4 py-2.5 mt-2.5">
@@ -533,7 +585,8 @@ const ProfileScreen = ({ navigation }: { navigation: any }) => {
             <View className="bg-white rounded-xl p-4 mb-2.5 flex-row items-center shadow-sm">
               {/* Profile Picture */}
               <TouchableOpacity onPress={handleProfilePicturePress} className="w-[70px] h-[70px] rounded-full overflow-hidden bg-[#F8F8F8] justify-center items-center mr-4">
-                <Image source={{ uri: currentProfilePictureUri }} className="w-full h-full rounded-full" />
+                {/* Use currentProfilePictureUri for the Image source */}
+                <Image source={currentProfilePictureUri} className="w-full h-full rounded-full" />
               </TouchableOpacity>
 
               {/* Name and Phone Number */}
@@ -633,7 +686,7 @@ const ProfileScreen = ({ navigation }: { navigation: any }) => {
 
             {/* Image */}
             <Image
-              source={{ uri: currentProfilePictureUri }}
+              source={ currentProfilePictureUri }
               className="w-full h-[70%] max-h-[70%]"
               resizeMode="contain"
             />
@@ -658,9 +711,9 @@ const ProfileScreen = ({ navigation }: { navigation: any }) => {
         <Modalize
           ref={detailModalRef}
           // Conditionally apply modalHeight or adjustToContentHeight
-          modalHeight={modalContentKey === 'PaymentSettings' ? screenHeight * 0.7 : undefined}
+          modalHeight={modalContentKey === 'PaymentSettings' ? screenHeight * 0.8 : undefined}
           adjustToContentHeight={modalContentKey !== 'PaymentSettings'}
-          
+
           withHandle={true} // Shows the drag handle at the top
           handlePosition="inside" // Positions handle inside the modal
           modalStyle={styles.modalizeContainer} // Custom styles for modal appearance

@@ -2,55 +2,68 @@ import React, { useRef, useEffect, useState } from 'react';
 import {
   View,
   FlatList,
-  Image,
   Dimensions,
   StyleSheet,
   Animated,
+  TouchableOpacity,
+  ActivityIndicator,
+  Modal,
+  Text,
+  Image as RNImage,
 } from 'react-native';
+import FastImage from 'react-native-fast-image'; // Optional, fallback provided
+import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
+import { faTimesCircle } from '@fortawesome/free-solid-svg-icons';
 
 const { width } = Dimensions.get('window');
 const ITEM_SPACING = 16;
 const ITEM_WIDTH = width * 0.9;
 
-// Original images array
-const originalImages = [
-    { uri: 'https://images.unsplash.com/photo-1532635042-a6f6ad4745f9?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D' },
-    { uri: 'https://images.unsplash.com/photo-1532635042-a6f6ad4745f9?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D' },
-    { uri: 'https://images.unsplash.com/photo-1532635042-a6f6ad4745f9?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D' },
-    { uri: 'https://images.unsplash.com/photo-1532635042-a6f6ad4745f9?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D' },
-    { uri: 'https://images.unsplash.com/photo-1532635042-a6f6ad4745f9?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D' },
-    { uri: 'https://images.unsplash.com/photo-1532635042-a6f6ad4745f9?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D' },
-    
-  ];
-// Clone data
-const images = [
-  originalImages[originalImages.length - 1], // Clone last
-  ...originalImages,
-  originalImages[0], // Clone first
-];
+export interface CarouselItem {
+  id: number;
+  uri: string;
+}
 
-export default function InfiniteCarousel() {
+interface InfiniteCarouselProps {
+  imagesData: CarouselItem[];
+}
+
+export default function InfiniteCarousel({ imagesData }: InfiniteCarouselProps) {
   const scrollX = useRef(new Animated.Value(0)).current;
-  const flatListRef = useRef<FlatList>(null);
-  const [activeIndex, setActiveIndex] = useState(1); // Start from first real image
+  const flatListRef = useRef<FlatList<CarouselItem>>(null);
+  const [activeIndex, setActiveIndex] = useState(1); // initial position for clones
+  const [modalVisible, setModalVisible] = useState(false);
+  const [modalImage, setModalImage] = useState<string | null>(null);
 
-  // Set initial scroll position on mount
+  // Create looped images array
+  const images = imagesData.length > 1
+    ? [
+        imagesData[imagesData.length - 1],
+        ...imagesData,
+        imagesData[0],
+      ]
+    : [...imagesData];
+
+  // Scroll to initial position
   useEffect(() => {
-    setTimeout(() => {
-      flatListRef.current?.scrollToIndex({ index: 1, animated: false });
-    }, 50);
-  }, []);
+    if (imagesData.length > 1) {
+      setTimeout(() => {
+        flatListRef.current?.scrollToIndex({ index: 1, animated: false });
+      }, 50);
+    }
+  }, [imagesData.length]);
 
   // Auto-scroll every 3s
   useEffect(() => {
+    if (imagesData.length <= 1) return;
     const interval = setInterval(() => {
-      let nextIndex = activeIndex + 1;
+      const nextIndex = activeIndex + 1;
       flatListRef.current?.scrollToIndex({ index: nextIndex, animated: true });
     }, 3000);
-
     return () => clearInterval(interval);
-  }, [activeIndex]);
+  }, [activeIndex, imagesData.length]);
 
+  // Infinite scroll logic
   const handleMomentumScrollEnd = (e: any) => {
     const offsetX = e.nativeEvent.contentOffset.x;
     const index = Math.round(offsetX / (ITEM_WIDTH + ITEM_SPACING));
@@ -58,16 +71,24 @@ export default function InfiniteCarousel() {
     let newIndex = index;
 
     if (index === 0) {
-      // Reached cloned last → jump to real last
-      newIndex = originalImages.length;
+      newIndex = imagesData.length;
       flatListRef.current?.scrollToIndex({ index: newIndex, animated: false });
     } else if (index === images.length - 1) {
-      // Reached cloned first → jump to real first
       newIndex = 1;
       flatListRef.current?.scrollToIndex({ index: newIndex, animated: false });
     }
 
     setActiveIndex(newIndex);
+  };
+
+  const openModal = (uri: string) => {
+    setModalImage(uri);
+    setModalVisible(true);
+  };
+
+  const closeModal = () => {
+    setModalVisible(false);
+    setModalImage(null);
   };
 
   return (
@@ -76,8 +97,8 @@ export default function InfiniteCarousel() {
         ref={flatListRef}
         data={images}
         horizontal
+        keyExtractor={(item, index) => `${item.id}-${index}`}
         showsHorizontalScrollIndicator={false}
-        keyExtractor={(_, index) => index.toString()}
         pagingEnabled
         snapToInterval={ITEM_WIDTH + ITEM_SPACING}
         decelerationRate="fast"
@@ -88,15 +109,31 @@ export default function InfiniteCarousel() {
         )}
         onMomentumScrollEnd={handleMomentumScrollEnd}
         renderItem={({ item }) => (
-          <View style={styles.imageContainer}>
-            <Image source={item} style={styles.image} />
-          </View>
+          <TouchableOpacity
+            activeOpacity={0.9}
+            onPress={() => openModal(item.uri)}
+          >
+            <View style={styles.imageContainer}>
+              {FastImage ? (
+                <FastImage
+                  source={{ uri: item.uri }}
+                  style={styles.image}
+                  resizeMode={FastImage.resizeMode.cover}
+                />
+              ) : (
+                <RNImage
+                  source={{ uri: item.uri }}
+                  style={styles.image}
+                  resizeMode="cover"
+                />
+              )}
+            </View>
+          </TouchableOpacity>
         )}
       />
 
-      {/* Animated Dots */}
       <View style={styles.dotContainer}>
-        {originalImages.map((_, i) => {
+        {imagesData.map((_, i) => {
           const inputRange = [
             (i) * (ITEM_WIDTH + ITEM_SPACING),
             (i + 1) * (ITEM_WIDTH + ITEM_SPACING),
@@ -120,47 +157,84 @@ export default function InfiniteCarousel() {
               key={i}
               style={[
                 styles.dot,
-                {
-                  width: dotWidth,
-                  opacity,
-                },
+                { width: dotWidth, opacity },
               ]}
             />
           );
         })}
       </View>
+
+      {/* Modal Image Viewer */}
+      <Modal visible={modalVisible} transparent onRequestClose={closeModal}>
+        <View style={styles.modalContainer}>
+          <TouchableOpacity style={styles.closeButton} onPress={closeModal}>
+            <FontAwesomeIcon icon={faTimesCircle} size={30} color="#fff" />
+          </TouchableOpacity>
+          {modalImage && (
+            FastImage ? (
+              <FastImage
+                source={{ uri: modalImage }}
+                style={styles.modalImage}
+                resizeMode={FastImage.resizeMode.contain}
+              />
+            ) : (
+              <RNImage
+                source={{ uri: modalImage }}
+                style={styles.modalImage}
+                resizeMode="contain"
+              />
+            )
+          )}
+        </View>
+      </Modal>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   carouselWrapper: {
-    height: 200,
+    height: 220,
     position: 'relative',
   },
   imageContainer: {
     width: ITEM_WIDTH,
+    height: 220,
     marginRight: ITEM_SPACING,
-    borderRadius: 20,
+    borderRadius: 16,
     overflow: 'hidden',
+    backgroundColor: '#f0f0f0',
   },
   image: {
     width: '100%',
-    height: 200,
-    resizeMode: 'cover',
+    height: '100%',
   },
   dotContainer: {
     position: 'absolute',
-    bottom: 15,
+    bottom: 12,
     width: '100%',
     flexDirection: 'row',
     justifyContent: 'center',
-    alignItems: 'center',
   },
   dot: {
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#000',
+    backgroundColor: '#333',
     marginHorizontal: 4,
+  },
+  modalContainer: {
+    flex: 1,
+    backgroundColor: '#000',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalImage: {
+    width: '90%',
+    height: '80%',
+  },
+  closeButton: {
+    position: 'absolute',
+    top: 40,
+    right: 20,
+    zIndex: 1,
   },
 });
