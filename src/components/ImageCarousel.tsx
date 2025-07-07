@@ -31,7 +31,7 @@ interface InfiniteCarouselProps {
 export default function InfiniteCarousel({ imagesData }: InfiniteCarouselProps) {
   const scrollX = useRef(new Animated.Value(0)).current;
   const flatListRef = useRef<FlatList<CarouselItem>>(null);
-  const [activeIndex, setActiveIndex] = useState(1); // initial position for clones
+  const [activeIndex, setActiveIndex] = useState(imagesData.length > 1 ? 1 : 0);
   const [modalVisible, setModalVisible] = useState(false);
   const [modalImage, setModalImage] = useState<string | null>(null);
 
@@ -51,25 +51,33 @@ export default function InfiniteCarousel({ imagesData }: InfiniteCarouselProps) 
         flatListRef.current?.scrollToIndex({ index: 1, animated: false });
       }, 50);
     }
-  }, [imagesData.length]);
+  }, [imagesData.length]);  
 
   // Auto-scroll every 3s
   useEffect(() => {
     if (imagesData.length <= 1) return;
+  
     const interval = setInterval(() => {
       const nextIndex = activeIndex + 1;
-      flatListRef.current?.scrollToIndex({ index: nextIndex, animated: true });
+      flatListRef.current?.scrollToIndex({
+        index: nextIndex,
+        animated: true,
+      });
     }, 3000);
+  
     return () => clearInterval(interval);
   }, [activeIndex, imagesData.length]);
+  
 
   // Infinite scroll logic
   const handleMomentumScrollEnd = (e: any) => {
+    if (imagesData.length <= 1) return; // Skip handling
+  
     const offsetX = e.nativeEvent.contentOffset.x;
     const index = Math.round(offsetX / (ITEM_WIDTH + ITEM_SPACING));
-
+  
     let newIndex = index;
-
+  
     if (index === 0) {
       newIndex = imagesData.length;
       flatListRef.current?.scrollToIndex({ index: newIndex, animated: false });
@@ -77,9 +85,10 @@ export default function InfiniteCarousel({ imagesData }: InfiniteCarouselProps) 
       newIndex = 1;
       flatListRef.current?.scrollToIndex({ index: newIndex, animated: false });
     }
-
+  
     setActiveIndex(newIndex);
   };
+  
 
   const openModal = (uri: string) => {
     setModalImage(uri);
