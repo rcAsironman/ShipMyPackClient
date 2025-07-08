@@ -10,6 +10,8 @@ import axios from 'axios';
 import { ENDPOINTS } from '../constants/constants';
 import { useSocket } from '../context/SocketProvider';
 import AvailableShipments from '../components/AvailableShipments';
+import LottieView from 'lottie-react-native';
+
 // import AvailableShipments from '../components/AvailableShipments';
 
 const { width } = Dimensions.get('window');
@@ -27,7 +29,6 @@ const HomeScreen = ({ navigation }: { navigation: any }) => {
   const socket = useSocket();
   const userName = 'Karthik';
   const earnings = 1234;
-  const [showAd, setShowAd] = useState(false);
   const [carouselImages, setCarouselImages] = useState<CarouselItem[]>([]);
 
 
@@ -75,7 +76,7 @@ const HomeScreen = ({ navigation }: { navigation: any }) => {
     travelTime: '10:00 AM',
     tripDays: 3,
   };
-  
+
   const handleViewAllShipments = () => {
     // Navigate to the screen that shows all available shipments
     navigation.navigate('AllShipmentsScreen'); // Replace with your actual screen name
@@ -94,7 +95,6 @@ const HomeScreen = ({ navigation }: { navigation: any }) => {
         }}
         edges={['right']}
       >
-
         {/* Header */}
         <View
           style={{
@@ -188,49 +188,31 @@ const HomeScreen = ({ navigation }: { navigation: any }) => {
                 alignItems: 'center',
               }}
               className="bg-airbnb-primary"
-              onPress={() => { navigation.navigate('ShipNowScreen'); setShowAd(true); }}
+              onPress={() => { navigation.navigate('ShipNowScreen'); }}
             >
               <Text style={{ color: 'white', fontSize: 16, fontWeight: '600' }}>Ship Now</Text>
             </TouchableOpacity>
-
-            <Text className='mt-12 text-2xl font-bold'>Available Shipments for your Trip</Text>
-
+              <View className='mt-14'></View>
             {/*display available shipments*/}
             <AvailableShipments
-              count={dummyShipmentData.count}
-              startingPoint={dummyShipmentData.startingPoint}
-              destination={dummyShipmentData.destination}
+              shipmentCount={dummyShipmentData.count}
+              destinationLocation={dummyShipmentData.destination}
+              estimatedTripDays={dummyShipmentData.tripDays}
+              originLocation={dummyShipmentData.startingPoint}
               travelDate={dummyShipmentData.travelDate}
               travelTime={dummyShipmentData.travelTime}
-              tripDays={dummyShipmentData.tripDays}
-              onPressViewAll={handleViewAllShipments}
+              onViewAllPress={()=> {navigation.navigate('AllShipmentsScreen');}}
             />
 
             <View className='mt-[52px]'>
-              <Text style={{ fontSize: 68, fontWeight: '800' }} className='text-gray-200'>Love  ❤️</Text>
+              <View style={{display: 'flex', flexDirection: 'row',}}>
+              <Text style={{ fontSize: 68, fontWeight: '800' }} className='text-gray-200'>Love  </Text>
+              <LottieView source={require('../../assets/heartSmile.json')} autoPlay loop style={{ height: 100, width: 200, marginLeft: -50}}/>
+              </View>
               <Text style={{ fontSize: 78, fontWeight: '800' }} className='text-gray-200'>Shipping</Text>
-
+              <Text style={{ fontSize: 29, fontWeight: '800' }} className='text-gray-200 mt-8'>ShipMyPack</Text>
             </View>
           </Animated.ScrollView>
-          {showAd && (
-            <View
-              style={{
-                position: 'absolute',
-                top: 0,
-                bottom: 0,
-                left: 0,
-                right: 0,
-                backgroundColor: 'rgba(0, 0, 0, 0.6)', // translucent white
-                zIndex: 999,
-              }}
-            >
-              <AdvertisementPopup
-                imageUrl="https://images.pexels.com/photos/93398/pexels-photo-93398.jpeg?_gl=1*ylvtz6*_ga*NDA5MTg1NTIzLjE3NTAzMTAwOTk.*_ga_8JE65Q40S6*czE3NTAzMTAwOTkkbzEkZzEkdDE3NTAzMTAxMDckajUyJGwwJGgw"
-                linkUrl="https://your-link.com"
-                onClose={() => setShowAd(false)}
-              />
-            </View>
-          )}
         </ScrollView>
       </SafeAreaView>
     </>

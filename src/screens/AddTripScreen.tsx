@@ -39,6 +39,8 @@ import {
 import { pick, types, isCancel, DocumentPickerResponse } from '@react-native-documents/picker';
 
 import { cities } from '../data/cities'; // Import the cities list
+import axios from 'axios';
+
 
 const { height: screenHeight } = Dimensions.get('window');
 

@@ -1,5 +1,5 @@
 // Server configuration
-export const SERVER_URL = 'http://192.168.0.4:3000'; // Change to your local/production IP
+export const SERVER_URL = 'http://192.168.0.14:3000'; // Change to your local/production IP
 
 // Socket endpoints (if needed separately)
 export const SOCKET_URL = SERVER_URL;
@@ -17,6 +17,8 @@ export const ENDPOINTS = {
   SUPPORT_MESSAGES: `${SERVER_URL}/api/support/messages`,
   PROFILE: `${SERVER_URL}/api/user/profile`,
   EARNINGS: `${SERVER_URL}/api/earnings`,
+  ADDTRIP: `${SERVER_URL}/SMP/transporter/save`,
+  ADVERTISEMENT: `${SERVER_URL}/SMP/ads/getAll`,
   // Add others as needed
 };
 

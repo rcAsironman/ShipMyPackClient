@@ -241,10 +241,9 @@ const EarningsScreen = ({ navigation }: { navigation: any }) => {
 
   // Handle press on a transaction item to show details (remains the same)
   const handleTransactionPress = (item: Transaction) => {
-    Alert.alert(
-      'Transaction Details',
-      `ID: ${item.id}\nType: ${item.type.charAt(0).toUpperCase() + item.type.slice(1)}\nAmount: ${formatCurrency(item.amount)}\nDate: ${new Date(item.date).toLocaleDateString('en-IN')}\nStatus: ${item.status.charAt(0).toUpperCase() + item.status.slice(1)}\nPayment Mode: ${item.paymentMode || 'N/A'}\nDescription: ${item.description}`
-    );
+    navigation.navigate('TransactionFullScreen', {
+      transaction: item,
+    });
   };
 
   // Handle initiation of withdrawal process (remains the same)

@@ -11,6 +11,8 @@ import TransporterCompleted from '../screens/TransporterCompleted';
 import SenderOngoing from '../screens/SenderOngoing';
 import SenderCompleted from '../screens/SenderCompleted';
 import ShipNowScreen from '../screens/ShipNowScreen';
+import AllShipmentsScreen from '../screens/AllShipmentsScreen';
+import TransactionFullScreen from '../screens/TransactionFullScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -27,6 +29,8 @@ export default function AppStack() {
       <Stack.Screen name="SenderOngoing" component={SenderOngoing}/>
       <Stack.Screen name="SenderCompleted" component={SenderCompleted}/>
       <Stack.Screen name="ShipNowScreen" component={ShipNowScreen}/>
+      <Stack.Screen name="AllShipmentsScreen" component={AllShipmentsScreen} />
+      <Stack.Screen name="TransactionFullScreen" component={TransactionFullScreen} />
       {/* Add more non-tab screens here */}
     </Stack.Navigator>
   );
