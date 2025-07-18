@@ -42,7 +42,7 @@ const HomeScreen = ({ navigation }: { navigation: any }) => {
 
     }
     catch (error) {
-      console.error('Error fetching carousel data:', error);
+      console.error('Error fetching carousel data:', error, '\n hello ',ENDPOINTS.CAROUSEL);
     }
   }
 
@@ -104,7 +104,7 @@ const HomeScreen = ({ navigation }: { navigation: any }) => {
             marginBottom: 0,
             paddingTop: height * 0.05,
             paddingHorizontal: 16,
-            height: height * 0.22, // or use a fixed height like h-[12%]
+            height: Platform.OS === 'ios'? height * 0.22 : height * 0.15, // or use a fixed height like h-[12%]
             backgroundColor: 'white',
             elevation: 5, // Android
             shadowColor: '#000', // iOS

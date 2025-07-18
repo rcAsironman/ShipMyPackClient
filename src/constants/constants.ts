@@ -1,5 +1,5 @@
 // Server configuration
-export const SERVER_URL = 'http://192.168.0.14:3000'; // Change to your local/production IP
+export const SERVER_URL = 'http://3.110.224.104:3000'; // Change to your local/production IP
 
 // Socket endpoints (if needed separately)
 export const SOCKET_URL = SERVER_URL;
