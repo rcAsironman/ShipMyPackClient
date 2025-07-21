@@ -18,6 +18,7 @@ import {
   Linking,
   FlatList,
   PanResponder,
+  TouchableWithoutFeedback,
 } from 'react-native';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
@@ -38,11 +39,17 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import { pick, types, isCancel, DocumentPickerResponse } from '@react-native-documents/picker';
 
-import { cities } from '../data/cities'; // Import the cities list
 import axios from 'axios';
-
+import { ENDPOINTS, SERVER_URL } from '../constants/constants';
+import { useAuthStore } from '../store/authStore';
 
 const { height: screenHeight } = Dimensions.get('window');
+
+
+type locationsType = {
+  id: number;
+  place: string;
+}
 
 // Define a type for the ticket file object
 interface FileObject {
@@ -56,10 +63,10 @@ interface FileObject {
 interface CityPickerModalProps {
   isVisible: boolean;
   onClose: () => void;
-  onSelectCity: (city: string) => void;
-  currentCity: string | null;
-  excludedCity: string | null;
-  allCities: string[];
+  onSelectCity: (city: number) => void;
+  currentCity: number | null;
+  excludedCity: number | null;
+  allCities: locationsType[];
 }
 
 const CityPickerModal: React.FC<CityPickerModalProps> = ({
@@ -71,7 +78,7 @@ const CityPickerModal: React.FC<CityPickerModalProps> = ({
   allCities,
 }) => {
   const [searchText, setSearchText] = useState<string>('');
-  const [displayCities, setDisplayCities] = useState<string[]>(allCities);
+  const [displayCities, setDisplayCities] = useState<locationsType[]>(allCities);
 
   // Animated value for modal position
   const pan = useRef(new Animated.Value(screenHeight)).current;
@@ -79,7 +86,7 @@ const CityPickerModal: React.FC<CityPickerModalProps> = ({
   const fullModalHeight = screenHeight; // Full height for the modal when expanded
 
   const [currentModalVisible, setCurrentModalVisible] = useState(false);
-
+ 
   useEffect(() => {
     if (isVisible) {
       setCurrentModalVisible(true);
@@ -105,23 +112,25 @@ const CityPickerModal: React.FC<CityPickerModalProps> = ({
     // 1. Filter by search text
     if (searchText) {
       const lowerCaseSearch = searchText.toLowerCase();
-      results = results.filter(city => city.toLowerCase().includes(lowerCaseSearch));
+      results = results.filter(city => city.place.toLowerCase().includes(lowerCaseSearch));
     }
 
     // 2. Filter out the excluded city
     if (excludedCity) {
-      const lowerCaseExcludedCity = excludedCity.toLowerCase();
-      results = results.filter(city => city.toLowerCase() !== lowerCaseExcludedCity);
+
+      results = results.filter(city => city.id !== excludedCity);
     }
 
     setDisplayCities(results);
   }, [searchText, excludedCity, allCities]);
 
-  const handleCityPress = (city: string) => {
+  const handleCityPress = (city: number) => {
     onSelectCity(city);
     setSearchText('');
     onClose(); // Close modal after selection
   };
+
+  
 
   const panResponder = useRef(
     PanResponder.create({
@@ -162,92 +171,99 @@ const CityPickerModal: React.FC<CityPickerModalProps> = ({
   if (!isVisible && !currentModalVisible) return null;
 
   return (
-    <Modal animationType="none" transparent={true} visible={isVisible || currentModalVisible} onRequestClose={onClose}>
-      <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)' }}>
-        <Animated.View
-          style={{
-            transform: [{ translateY: pan }],
-            backgroundColor: 'white',
-            borderTopLeftRadius: 20,
-            borderTopRightRadius: 20,
-            padding: 5,
-            paddingBottom: Platform.OS === 'ios' ? 30 : 5, // Add padding for iOS safe area
-            position: 'absolute',
-            left: 0,
-            right: 0,
-            height: fullModalHeight, // Allow full height to enable full-page view
-          }}
-          {...panResponder.panHandlers} // Attach pan handlers here
-        >
-          {/* Draggable indicator */}
-          <View className="items-center py-2">
-            <View className="w-16 h-1 bg-gray-300 rounded-full"></View>
-          </View>
+    <KeyboardAvoidingView>
+      <Modal animationType="none" transparent={true} visible={isVisible || currentModalVisible} onRequestClose={onClose}>
+          <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)' }}>
+            <Animated.View
+              style={{
+                transform: [{ translateY: pan }],
+                backgroundColor: 'white',
+                borderTopLeftRadius: 20,
+                borderTopRightRadius: 20,
+                padding: 5,
+                paddingBottom: Platform.OS === 'ios' ? 30 : 5, // Add padding for iOS safe area
+                position: 'absolute',
+                left: 0,
+                right: 0,
+                height: fullModalHeight, // Allow full height to enable full-page view
+              }}
+              {...panResponder.panHandlers} // Attach pan handlers here
+            >
+            
+              {/* Draggable indicator */}
+              <View className="items-center py-2">
+                <View className="w-16 h-1 bg-gray-300 rounded-full"></View>
+              </View>
 
-          <View className="flex-1 p-3">
-            <View className="flex-row justify-between items-center mb-4">
-              <Text className="text-xl font-bold text-gray-800">Select City</Text>
-              <TouchableOpacity onPress={onClose} className="p-2">
-                <FontAwesomeIcon icon={faTimes} size={24} color="#6B7280" />
-              </TouchableOpacity>
-            </View>
-
-            <View className="flex-row items-center border border-gray-300 rounded-xl px-4 py-2 mb-4 bg-gray-50">
-              <FontAwesomeIcon icon={faSearch} size={18} color="#9CA3AF" />
-              <TextInput
-                className="ml-3 flex-1 text-gray-800 text-base"
-                placeholder="Search for a city..."
-                placeholderTextColor="#9CA3AF"
-                value={searchText}
-                onChangeText={setSearchText}
-              />
-              {/* Clear Button for Input */}
-              {searchText.length > 0 && (
-                <TouchableOpacity onPress={() => setSearchText('')} className="p-1 ml-2">
-                  <FontAwesomeIcon icon={faTimesCircle} size={20} color="#9CA3AF" />
-                </TouchableOpacity>
-              )}
-            </View>
-
-            <FlatList
-              data={displayCities}
-              keyExtractor={item => item}
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  onPress={() => handleCityPress(item)}
-                  className={`py-3 px-2 border-b border-gray-200 ${
-                    item === currentCity ? 'bg-blue-100' : ''
-                  }`}
-                >
-                  <Text
-                    className={`text-lg ${
-                      item === currentCity ? 'font-semibold text-black' : 'text-gray-800'
-                    }`}
-                  >
-                    {item}
-                    {item === currentCity && <Text className="text-sm text-gray-500 ml-2"> (Already Selected)</Text>}
-                  </Text>
-                </TouchableOpacity>
-              )}
-              initialNumToRender={20}
-              maxToRenderPerBatch={10}
-              windowSize={21}
-              style={{ flexGrow: 1 }}
-              ListEmptyComponent={() => (
-                <View className="p-4 items-center">
-                  <Text className="text-gray-500 text-base text-center">
-                    Sorry, we are currently not serving at this place. Soon we will.
-                  </Text>
+              <View className="flex-1 p-3">
+                <View className="flex-row justify-between items-center mb-4">
+                  <Text className="text-xl font-bold text-gray-800">Select City</Text>
+                 
+                  <TouchableOpacity onPress={onClose} className="p-2">
+                    <FontAwesomeIcon icon={faTimes} size={24} color="#6B7280" />
+                  </TouchableOpacity>
                 </View>
-              )}
-            />
+
+                <View className="flex-row items-center border border-gray-300 rounded-xl px-4 py-2 mb-4 bg-gray-50">
+                  <FontAwesomeIcon icon={faSearch} size={18} color="#9CA3AF" />
+                  <TextInput
+                    className="ml-3 flex-1 text-gray-800 text-base"
+                    placeholder="Search for a city..."
+                    placeholderTextColor="#9CA3AF"
+                    value={searchText}
+                    onChangeText={setSearchText}
+                  />
+                  {/* Clear Button for Input */}
+                  {searchText.length > 0 && (
+                    <TouchableOpacity onPress={() => setSearchText('')} className="p-1 ml-2">
+                      <FontAwesomeIcon icon={faTimesCircle} size={20} color="#9CA3AF" />
+                    </TouchableOpacity>
+                  )}
+                </View>
+
+                <FlatList
+                  data={displayCities}
+                  keyExtractor={item => item.id.toString()}
+                  contentContainerStyle={{
+                    paddingBottom: 500
+                  }}
+                  renderItem={({ item }) => (
+                    <TouchableOpacity
+                      onPress={() => handleCityPress(item.id)}
+                      className={`py-3 px-2 border-b border-gray-200 ${item.id === currentCity ? 'bg-blue-100' : ''
+                        }`}
+                    >
+                      <Text
+                        className={`text-lg ${item.id === currentCity ? 'font-semibold text-black' : 'text-gray-800'
+                          }`}
+                      >
+                        {item.place}
+                        {item.id === currentCity && <Text className="text-sm text-gray-500 ml-2"> (Already Selected)</Text>}
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+                  initialNumToRender={20}
+                  maxToRenderPerBatch={10}
+                  windowSize={21}
+                  style={{ flexGrow: 1 }}
+                  ListEmptyComponent={() => (
+                    <View className="p-4 items-center">
+                      <Text className="text-gray-500 text-base text-center">
+                        Sorry, we are currently not serving at this place. Soon we will.
+                      </Text>
+                    </View>
+                  )}
+                />
+              </View>
+            </Animated.View>
           </View>
-        </Animated.View>
-      </View>
-    </Modal>
+      </Modal>
+    </KeyboardAvoidingView>
   );
 };
 // --- End CityPickerModal Component ---
+
+
 
 export default function AddTripScreen({ navigation }: { navigation: any }) {
   const [travelDate, setTravelDate] = useState<Date>(new Date());
@@ -257,10 +273,10 @@ export default function AddTripScreen({ navigation }: { navigation: any }) {
   const [ticketFile, setTicketFile] = useState<FileObject | null>(null);
   const [weight, setWeight] = useState<string>('');
   const [startPincode, setStartPincode] = useState<string>('');
-  const [startLocation, setStartLocation] = useState<string | null>(null);
+  const [startLocation, setStartLocation] = useState<number | null>(null);
   const [pickupPoint, setPickupPoint] = useState<string>('');
   const [destinationPincode, setDestinationPincode] = useState<string>('');
-  const [destinationLocation, setDestinationLocation] = useState<string | null>(null);
+  const [destinationLocation, setDestinationLocation] = useState<number | null>(null);
   const [dropPoint, setDropPoint] = useState<string>('');
 
   const [showDatePicker, setShowDatePicker] = useState<boolean>(false);
@@ -281,9 +297,68 @@ export default function AddTripScreen({ navigation }: { navigation: any }) {
   const [showFullPreviewModal, setShowFullPreviewModal] = useState<boolean>(false);
   const [previewFileUri, setPreviewFileUri] = useState<string | null>(null);
 
+  const [cities, setCities] = useState<locationsType[] | null>(null);
   const inputStyle = 'border border-gray-300 px-4 py-3 rounded-xl bg-gray-50 text-gray-800 mb-4';
   const touchableInputStyle = 'flex-row items-center border border-gray-300 rounded-xl px-4 py-3 bg-gray-50 mb-4';
+  const user =  useAuthStore((state) => state.user);
 
+  useEffect(() => {
+    const fetchCities = async () => {
+      try {
+
+        const response = await axios.get(ENDPOINTS.FETCH_LOCATIONS);
+        const data = response.data;
+        if (Array.isArray(data) && data.length > 0) {
+          const citiesData = data.map((item) => ({ id: item.id, place: item.place }));
+          setCities(citiesData);
+        } else {
+          setCities([]);
+        }
+      }
+      catch (error) {
+        Alert.alert('Error', 'Failed to fetch cities. Please try again later.');
+      }
+    }
+
+    fetchCities();
+    //cleanup function to reset cities when component unmounts
+    return () => {
+      setCities(null);
+    };
+
+  }, [])
+  const handleAddTripPress = () => {
+    try {
+      const response = axios.post(ENDPOINTS.ADDTRIP, {
+        "user_id": user?.id || -99999,
+        "ticket_number": "string",
+        "start_point_id": startLocation || -99999,
+        "end_point_id": destinationLocation || -99999,
+        "ticket_image_url": "string",
+        "start_point_time": pickupTime.toISOString(),
+        "end_point_time": dropTime.toISOString(),
+        "status_id": 0,
+        "weight_capacity": weight,
+        "start_pin_code": startPincode.toString(),
+        "end_pin_code": destinationPincode.toString(),
+        "pickup_point": pickupPoint || "null",
+        "start_date": travelDate.toISOString(),
+        "end_date": "2025-07-20",
+        "start_location": startLocation?.toString() || "null",
+        "end_location": destinationLocation?.toString() || "null",
+        "shipment_ids": [
+          {
+            "id": 0,
+            "amount": 0
+          }
+        ]
+      })
+    }
+    catch (error) {
+
+    }
+
+  }
   const onDateChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
     setShowDatePicker(false);
     if (selectedDate) setTravelDate(selectedDate);
@@ -304,12 +379,12 @@ export default function AddTripScreen({ navigation }: { navigation: any }) {
     if (selectedTime) setDropTime(selectedTime);
   };
 
-  const handleSelectStartLocation = (city: string) => {
+  const handleSelectStartLocation = (city: number) => {
     setStartLocation(city);
     setShowStartLocationPicker(false);
   };
 
-  const handleSelectDestinationLocation = (city: string) => {
+  const handleSelectDestinationLocation = (city: number) => {
     setDestinationLocation(city);
     setShowDestinationLocationPicker(false);
   };
@@ -381,40 +456,7 @@ export default function AddTripScreen({ navigation }: { navigation: any }) {
     setPreviewFileUri(null);
   };
 
-  const handleSubmit = () => {
-    if (
-      !travelDate ||
-      !dropDate ||
-      !pickupTime ||
-      !dropTime ||
-      !weight ||
-      !ticketFile ||
-      !startPincode ||
-      !startLocation ||
-      !destinationPincode ||
-      !destinationLocation
-    ) {
-      Alert.alert('Missing Information', 'Please fill in all required fields and upload your ticket.');
-      return;
-    }
 
-    setTripDetailsToConfirm({
-      travelDate: travelDate.toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' }),
-      dropDate: dropDate.toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' }),
-      pickupTime: pickupTime.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }),
-      dropTime: dropTime.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }),
-      ticketFileName: ticketFile?.name || 'N/A',
-      weight: `${weight} kg`,
-      startPincode,
-      startLocation,
-      pickupPoint: pickupPoint || 'N/A',
-      destinationPincode,
-      destinationLocation,
-      dropPoint: dropPoint || 'N/A',
-    });
-
-    setShowConfirmationModal(true);
-  };
 
   const confirmSubmission = () => {
     setShowConfirmationModal(false);
@@ -461,10 +503,12 @@ export default function AddTripScreen({ navigation }: { navigation: any }) {
     });
   };
 
+
+
+
   return (
     <SafeAreaView className="flex-1 bg-white">
       <StatusBar backgroundColor="white" barStyle="dark-content" />
-
       {/* FIXED HEADER - Styled to match HomeScreen header */}
       <View
         style={{
@@ -483,11 +527,12 @@ export default function AddTripScreen({ navigation }: { navigation: any }) {
           zIndex: 10,
         }}
         className="shadow-md"
-      >  
-          <Text style={{ fontSize: 20, fontWeight: '700', color: 'black', flex: 1, textAlign: 'center' }}>
+      >
+        <Text style={{ fontSize: 20, fontWeight: '700', color: 'black', flex: 1, textAlign: 'center' }}>
           Add Your Trip
         </Text>
         <View style={{ width: 24, height: 24 }} />
+       
       </View>
 
       {/* Scrollable Content Container: KeyboardAvoidingView wraps ScrollView */}
@@ -496,6 +541,8 @@ export default function AddTripScreen({ navigation }: { navigation: any }) {
         style={{ flex: 1 }}
         keyboardVerticalOffset={0}
       >
+              <TouchableWithoutFeedback onPress={() => Keyboard.dismiss}>
+
         <ScrollView
           className="flex-1 bg-gray-50"
           contentContainerStyle={{ padding: 16, paddingBottom: 120 }}
@@ -537,7 +584,7 @@ export default function AddTripScreen({ navigation }: { navigation: any }) {
             <TouchableOpacity onPress={() => setShowStartLocationPicker(true)} className={touchableInputStyle}>
               <FontAwesomeIcon icon={faMapMarkerAlt} color="#888" size={18} />
               <Text className="ml-3 text-gray-800 text-base flex-1">
-                {startLocation || 'Starting Location'}
+                {startLocation != null && cities?.at(startLocation - 1)?.place.toString() || 'Starting Location'}
               </Text>
             </TouchableOpacity>
 
@@ -603,7 +650,7 @@ export default function AddTripScreen({ navigation }: { navigation: any }) {
             <TouchableOpacity onPress={() => setShowDestinationLocationPicker(true)} className={touchableInputStyle}>
               <FontAwesomeIcon icon={faMapMarkerAlt} color="#888" size={18} />
               <Text className="ml-3 text-gray-800 text-base flex-1">
-                {destinationLocation || 'Destination Location'}
+                {destinationLocation != null && cities?.at(destinationLocation - 1)?.place.toString() || 'Destination Location'}
               </Text>
             </TouchableOpacity>
 
@@ -700,9 +747,10 @@ export default function AddTripScreen({ navigation }: { navigation: any }) {
             <Text className="text-white font-bold text-lg">Submit Trip</Text>
           </TouchableOpacity>
         </ScrollView>
+        </TouchableWithoutFeedback>
       </KeyboardAvoidingView>
- {/* Confirmation Modal */}
- <Modal
+      {/* Confirmation Modal */}
+      <Modal
         animationType="fade"
         transparent={true}
         visible={showConfirmationModal}
@@ -751,7 +799,7 @@ export default function AddTripScreen({ navigation }: { navigation: any }) {
 
                   return (
                     <View key={key} className="flex-row items-center mb-3">
-                      {icon && <FontAwesomeIcon icon={icon} size={16} color="#4A5568"/>} {/* Added mr-3 here */}
+                      {icon && <FontAwesomeIcon icon={icon} size={16} color="#4A5568" />} {/* Added mr-3 here */}
                       <Text className="text-gray-700 text-base font-semibold pl-4">
                         {label}:
                       </Text>

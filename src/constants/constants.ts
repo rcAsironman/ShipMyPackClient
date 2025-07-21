@@ -19,6 +19,7 @@ export const ENDPOINTS = {
   EARNINGS: `${SERVER_URL}/api/earnings`,
   ADDTRIP: `${SERVER_URL}/SMP/transporter/save`,
   ADVERTISEMENT: `${SERVER_URL}/SMP/ads/getAll`,
+  FETCH_LOCATIONS: `${SERVER_URL}/SMP/start_points/getAll`,
   // Add others as needed
 };
 

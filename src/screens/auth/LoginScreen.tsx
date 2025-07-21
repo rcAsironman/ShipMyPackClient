@@ -125,7 +125,7 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
   // Handle sending OTP to the entered mobile number
   const handleSendOtp = async () => {
     if(Platform.OS === 'ios'){
-      await login(); // Ensure user is logged in before sending OTP on iOS
+      await login({id: "1", name: "Karthik", email: "karthik@shipmypack.com"}); // Ensure user is logged in before sending OTP on iOS
     }
     Keyboard.dismiss(); // Dismiss keyboard when sending OTP
     const rawMobile = mobile.trim();
@@ -191,7 +191,7 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
           // Clear OTP input fields for new OTP and focus first one AFTER sending
           setOtp(['', '', '', '', '', '']);
           otpRefs[0].current?.focus();
-          await login(); // This correctly calls the login action in your Zustand store
+          await login({id: "1", name: "Karthik", email: "karthik@shipmypack.com"}); // This correctly calls the login action in your Zustand store
         }
         // No 'else' needed here, as the hook handles error toasts
       } catch (err) {

@@ -97,6 +97,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - SocketRocket
     - Yoga
+  - razorpay-pod (1.4.3)
   - RCT-Folly (2024.11.18.00):
     - boost
     - DoubleConversion
@@ -1824,6 +1825,9 @@ PODS:
     - ReactCommon/turbomodule/core
     - SocketRocket
     - Yoga
+  - react-native-razorpay (2.3.0):
+    - razorpay-pod
+    - React
   - react-native-safe-area-context (5.5.0):
     - boost
     - DoubleConversion
@@ -2910,6 +2914,7 @@ DEPENDENCIES:
   - "react-native-blur (from `../node_modules/@react-native-community/blur`)"
   - "react-native-document-picker (from `../node_modules/@react-native-documents/picker`)"
   - react-native-image-picker (from `../node_modules/react-native-image-picker`)
+  - react-native-razorpay (from `../node_modules/react-native-razorpay`)
   - react-native-safe-area-context (from `../node_modules/react-native-safe-area-context`)
   - "react-native-vector-icons-evil-icons (from `../node_modules/@react-native-vector-icons/evil-icons`)"
   - React-NativeModulesApple (from `../node_modules/react-native/ReactCommon/react/nativemodule/core/platform/ios`)
@@ -2972,6 +2977,7 @@ SPEC REPOS:
     - GoogleUtilities
     - GTMSessionFetcher
     - libwebp
+    - razorpay-pod
     - RecaptchaInterop
     - SDWebImage
     - SDWebImageWebPCoder
@@ -3070,6 +3076,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/@react-native-documents/picker"
   react-native-image-picker:
     :path: "../node_modules/react-native-image-picker"
+  react-native-razorpay:
+    :path: "../node_modules/react-native-razorpay"
   react-native-safe-area-context:
     :path: "../node_modules/react-native-safe-area-context"
   react-native-vector-icons-evil-icons:
@@ -3187,6 +3195,7 @@ SPEC CHECKSUMS:
   libwebp: 02b23773aedb6ff1fd38cec7a77b81414c6842a8
   lottie-ios: a881093fab623c467d3bce374367755c272bdd59
   lottie-react-native: 4979f32e1613c1ad907d6e448cd84a9c9e37024c
+  razorpay-pod: af9d52abe715ed5cc3eed9fdf6fd74340443d0b9
   RCT-Folly: 846fda9475e61ec7bcbf8a3fe81edfcaeb090669
   RCTDeprecation: ff787f6c860a1b97dd1bc27264b61d23ad1994da
   RCTRequired: 664eb8399ed8a83e26ab65af7c2ad390f7e61696
@@ -3223,6 +3232,7 @@ SPEC CHECKSUMS:
   react-native-blur: ecdc987ab8d8fba95abef14551f033376872d0a6
   react-native-document-picker: b37cf6660ad9087b782faa78a1e67687fac15bfd
   react-native-image-picker: 9bceb747cd6cde22a3416ffdc819d11b5b11f156
+  react-native-razorpay: ab51e7be3d906f49b26198d978fc6f163e846d30
   react-native-safe-area-context: da0337f187d2944d4f7a31da10581150ac30cd22
   react-native-vector-icons-evil-icons: 26a89e2d729c84231afbe726de8aa5b976a7a6be
   React-NativeModulesApple: 7fda5d50e7aacd04eee21799be16913360562eb5

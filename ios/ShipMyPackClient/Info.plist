@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
-	<string>ShipMyPackClient</string>
+	<string>ShipMyPack</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -22,12 +22,6 @@
 	<string>????</string>
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
-	<key>NSPhotoLibraryUsageDescription</key>
-	<string>We need access to your photo library to let you upload images for your shipments.</string>
-	<key>NSCameraUsageDescription</key>
-	<string>We need access to your camera to let you take photos for your shipments.</string>
-	<key>NSMicrophoneUsageDescription</key>
-	<string>We need access to your microphone for video recording (if mediaType is mixed/video).</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSAppTransportSecurity</key>
@@ -37,18 +31,24 @@
 		<key>NSAllowsLocalNetworking</key>
 		<true/>
 		<key>NSExceptionDomains</key>
-        <dict>
-          <key>3.110.224.104</key>
-          <dict>
-              <key>NSIncludesSubdomains</key>
-              <true/>
-              <key>NSExceptionAllowsInsecureHTTPLoads</key>
-              <true/>
-         </dict>
-    </dict>
+		<dict>
+			<key>3.110.224.104</key>
+			<dict>
+				<key>NSExceptionAllowsInsecureHTTPLoads</key>
+				<true/>
+				<key>NSIncludesSubdomains</key>
+				<true/>
+			</dict>
+		</dict>
 	</dict>
+	<key>NSCameraUsageDescription</key>
+	<string>We need access to your camera to let you take photos for your shipments.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string></string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>We need access to your microphone for video recording (if mediaType is mixed/video).</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>We need access to your photo library to let you upload images for your shipments.</string>
 	<key>RCTNewArchEnabled</key>
 	<true/>
 	<key>UILaunchStoryboardName</key>
@@ -57,13 +57,25 @@
 	<array>
 		<string>arm64</string>
 	</array>
+	<key>UIRequiresFullScreen</key>
+	<false/>
+	<key>UIStatusBarHidden</key>
+	<true/>
+	<key>UIStatusBarStyle</key>
+	<string></string>
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
-		<string>UIInterfaceOrientationLandscapeLeft</string>
-		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+    	<string>tez</string>         
+		<string>phonepe</string>     
+		<string>paytmmp</string>    
+		<string>cred</string>        
+		<string>bharatpe</string>    
+	</array>
 </dict>
 </plist>
