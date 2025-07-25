@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -36,6 +36,7 @@ import {
 // Removed: import { pick, types, isCancel, DocumentPickerResponse } from '@react-native-documents/picker';
 import { Modalize } from 'react-native-modalize';
 import { launchImageLibrary, launchCamera, Asset } from 'react-native-image-picker'; // Keep launchCamera as it might be useful in the future, even if not directly used now for profile pic
+import { useAuthStore } from '../store/authStore';
 
 // Get screen dimensions for responsive layout and full-screen modal
 const { height: screenHeight, width: screenWidth } = Dimensions.get('window');
@@ -92,7 +93,15 @@ const ProfileScreen = ({ navigation }: { navigation: any }) => {
   const [selectedPaymentMethodType, setSelectedPaymentMethodType] = useState<'Bank Account' | 'UPI ID' | null>(null);
   const [bankDetails, setBankDetails] = useState<Omit<BankAccountDetails, 'accountNumber'> & { accountNumber: string, confirmAccountNumber: string }>({ bankName: '', accountNumber: '', confirmAccountNumber: '', ifsc: '', holderName: '' });
   const [upiDetails, setUpiDetails] = useState<UPIDetails>({ upiId: '', name: '' });
+  const logout = useAuthStore((state) => state.logout);
 
+
+  //user object from local
+  const user = useAuthStore((state) => state.user);
+
+  useEffect(()=>{
+    console.log("user in profile screen", user);
+  },[])
   const openDetailModal = (key: string, title: string) => {
     setModalContentKey(key);
     setModalTitle(title);
@@ -243,6 +252,10 @@ const ProfileScreen = ({ navigation }: { navigation: any }) => {
     );
   };
 
+  const handleLogout = async () => {
+    await logout();
+    navigation.navigate('Login'); // Navigate to Login screen after logout
+  }
   // This function will render content based on the `modalContentKey`
   const renderDetailModalContent = () => {
     switch (modalContentKey) {
@@ -518,21 +531,6 @@ const ProfileScreen = ({ navigation }: { navigation: any }) => {
             </TouchableOpacity>
           </ScrollView>
         );
-      case 'Logout': // This case is handled by Alert, but included for completeness if modal were used
-        return (
-          <View className="p-4 items-center">
-            <Text className="text-xl font-bold text-[#212121] mb-4">Log Out</Text>
-            <Text className="text-base text-[#666666] mb-6 text-center">
-              Are you sure you want to log out from your account?
-            </Text>
-            <TouchableOpacity className="bg-red-600 rounded-lg py-4 w-full items-center mb-4 shadow-sm" onPress={() => { detailModalRef.current?.close(); console.log('User logged out'); }}>
-              <Text className="text-white text-lg font-semibold">Log Out</Text>
-            </TouchableOpacity>
-            <TouchableOpacity className="bg-gray-100 border border-gray-300 rounded-lg py-4 w-full items-center shadow-sm" onPress={() => detailModalRef.current?.close()}>
-              <Text className="text-gray-800 text-lg font-semibold">Cancel</Text>
-            </TouchableOpacity>
-          </View>
-        );
       default:
         return (
           <View className="p-4">
@@ -648,7 +646,8 @@ const ProfileScreen = ({ navigation }: { navigation: any }) => {
                 <Text className="text-base text-[#212121] ml-4 flex-1">Notification preferences</Text>
               </View>
             </TouchableOpacity>
-            <TouchableOpacity className="flex-row items-center justify-between bg-white rounded-xl py-3.5 px-4 mb-2 shadow-sm" onPress={() => Alert.alert('Log Out', 'Are you sure you want to log out?', [{ text: 'Cancel', style: 'cancel' }, { text: 'Log Out', onPress: () => console.log('User logged out') }])}>
+            <TouchableOpacity className="flex-row items-center justify-between bg-white rounded-xl py-3.5 px-4 mb-2 shadow-sm" 
+            onPress={handleLogout}>
               <View className="flex-row items-center">
                 <FontAwesomeIcon icon={faSignOutAlt} size={20} color={NW_COLORS.danger} />
                 <Text className="text-base text-red-600 ml-4 flex-1" style={{ color: NW_COLORS.danger }}>Log out</Text>

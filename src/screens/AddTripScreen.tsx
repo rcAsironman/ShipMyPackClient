@@ -42,6 +42,7 @@ import { pick, types, isCancel, DocumentPickerResponse } from '@react-native-doc
 import axios from 'axios';
 import { ENDPOINTS, SERVER_URL } from '../constants/constants';
 import { useAuthStore } from '../store/authStore';
+import CustomAlertModal from '../components/CustomAlertModal';
 
 const { height: screenHeight } = Dimensions.get('window');
 
@@ -130,7 +131,7 @@ const CityPickerModal: React.FC<CityPickerModalProps> = ({
     onClose(); // Close modal after selection
   };
 
-  
+
 
   const panResponder = useRef(
     PanResponder.create({
@@ -173,90 +174,90 @@ const CityPickerModal: React.FC<CityPickerModalProps> = ({
   return (
     <KeyboardAvoidingView>
       <Modal animationType="none" transparent={true} visible={isVisible || currentModalVisible} onRequestClose={onClose}>
-          <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)' }}>
-            <Animated.View
-              style={{
-                transform: [{ translateY: pan }],
-                backgroundColor: 'white',
-                borderTopLeftRadius: 20,
-                borderTopRightRadius: 20,
-                padding: 5,
-                paddingBottom: Platform.OS === 'ios' ? 30 : 5, // Add padding for iOS safe area
-                position: 'absolute',
-                left: 0,
-                right: 0,
-                height: fullModalHeight, // Allow full height to enable full-page view
-              }}
-              {...panResponder.panHandlers} // Attach pan handlers here
-            >
-            
-              {/* Draggable indicator */}
-              <View className="items-center py-2">
-                <View className="w-16 h-1 bg-gray-300 rounded-full"></View>
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)' }}>
+          <Animated.View
+            style={{
+              transform: [{ translateY: pan }],
+              backgroundColor: 'white',
+              borderTopLeftRadius: 20,
+              borderTopRightRadius: 20,
+              padding: 5,
+              paddingBottom: Platform.OS === 'ios' ? 30 : 5, // Add padding for iOS safe area
+              position: 'absolute',
+              left: 0,
+              right: 0,
+              height: fullModalHeight, // Allow full height to enable full-page view
+            }}
+            {...panResponder.panHandlers} // Attach pan handlers here
+          >
+
+            {/* Draggable indicator */}
+            <View className="items-center py-2">
+              <View className="w-16 h-1 bg-gray-300 rounded-full"></View>
+            </View>
+
+            <View className="flex-1 p-3">
+              <View className="flex-row justify-between items-center mb-4">
+                <Text className="text-xl font-bold text-gray-800">Select City</Text>
+
+                <TouchableOpacity onPress={onClose} className="p-2">
+                  <FontAwesomeIcon icon={faTimes} size={24} color="#6B7280" />
+                </TouchableOpacity>
               </View>
 
-              <View className="flex-1 p-3">
-                <View className="flex-row justify-between items-center mb-4">
-                  <Text className="text-xl font-bold text-gray-800">Select City</Text>
-                 
-                  <TouchableOpacity onPress={onClose} className="p-2">
-                    <FontAwesomeIcon icon={faTimes} size={24} color="#6B7280" />
+              <View className="flex-row items-center border border-gray-300 rounded-xl px-4 py-2 mb-4 bg-gray-50">
+                <FontAwesomeIcon icon={faSearch} size={18} color="#9CA3AF" />
+                <TextInput
+                  className="ml-3 flex-1 text-gray-800 text-base"
+                  placeholder="Search for a city..."
+                  placeholderTextColor="#9CA3AF"
+                  value={searchText}
+                  onChangeText={setSearchText}
+                />
+                {/* Clear Button for Input */}
+                {searchText.length > 0 && (
+                  <TouchableOpacity onPress={() => setSearchText('')} className="p-1 ml-2">
+                    <FontAwesomeIcon icon={faTimesCircle} size={20} color="#9CA3AF" />
                   </TouchableOpacity>
-                </View>
+                )}
+              </View>
 
-                <View className="flex-row items-center border border-gray-300 rounded-xl px-4 py-2 mb-4 bg-gray-50">
-                  <FontAwesomeIcon icon={faSearch} size={18} color="#9CA3AF" />
-                  <TextInput
-                    className="ml-3 flex-1 text-gray-800 text-base"
-                    placeholder="Search for a city..."
-                    placeholderTextColor="#9CA3AF"
-                    value={searchText}
-                    onChangeText={setSearchText}
-                  />
-                  {/* Clear Button for Input */}
-                  {searchText.length > 0 && (
-                    <TouchableOpacity onPress={() => setSearchText('')} className="p-1 ml-2">
-                      <FontAwesomeIcon icon={faTimesCircle} size={20} color="#9CA3AF" />
-                    </TouchableOpacity>
-                  )}
-                </View>
-
-                <FlatList
-                  data={displayCities}
-                  keyExtractor={item => item.id.toString()}
-                  contentContainerStyle={{
-                    paddingBottom: 500
-                  }}
-                  renderItem={({ item }) => (
-                    <TouchableOpacity
-                      onPress={() => handleCityPress(item.id)}
-                      className={`py-3 px-2 border-b border-gray-200 ${item.id === currentCity ? 'bg-blue-100' : ''
+              <FlatList
+                data={displayCities}
+                keyExtractor={item => item.id.toString()}
+                contentContainerStyle={{
+                  paddingBottom: 500
+                }}
+                renderItem={({ item }) => (
+                  <TouchableOpacity
+                    onPress={() => handleCityPress(item.id)}
+                    className={`py-3 px-2 border-b border-gray-200 ${item.id === currentCity ? 'bg-blue-100' : ''
+                      }`}
+                  >
+                    <Text
+                      className={`text-lg ${item.id === currentCity ? 'font-semibold text-black' : 'text-gray-800'
                         }`}
                     >
-                      <Text
-                        className={`text-lg ${item.id === currentCity ? 'font-semibold text-black' : 'text-gray-800'
-                          }`}
-                      >
-                        {item.place}
-                        {item.id === currentCity && <Text className="text-sm text-gray-500 ml-2"> (Already Selected)</Text>}
-                      </Text>
-                    </TouchableOpacity>
-                  )}
-                  initialNumToRender={20}
-                  maxToRenderPerBatch={10}
-                  windowSize={21}
-                  style={{ flexGrow: 1 }}
-                  ListEmptyComponent={() => (
-                    <View className="p-4 items-center">
-                      <Text className="text-gray-500 text-base text-center">
-                        Sorry, we are currently not serving at this place. Soon we will.
-                      </Text>
-                    </View>
-                  )}
-                />
-              </View>
-            </Animated.View>
-          </View>
+                      {item.place}
+                      {item.id === currentCity && <Text className="text-sm text-gray-500 ml-2"> (Already Selected)</Text>}
+                    </Text>
+                  </TouchableOpacity>
+                )}
+                initialNumToRender={20}
+                maxToRenderPerBatch={10}
+                windowSize={21}
+                style={{ flexGrow: 1 }}
+                ListEmptyComponent={() => (
+                  <View className="p-4 items-center">
+                    <Text className="text-gray-500 text-base text-center">
+                      Sorry, we are currently not serving at this place. Soon we will.
+                    </Text>
+                  </View>
+                )}
+              />
+            </View>
+          </Animated.View>
+        </View>
       </Modal>
     </KeyboardAvoidingView>
   );
@@ -300,7 +301,7 @@ export default function AddTripScreen({ navigation }: { navigation: any }) {
   const [cities, setCities] = useState<locationsType[] | null>(null);
   const inputStyle = 'border border-gray-300 px-4 py-3 rounded-xl bg-gray-50 text-gray-800 mb-4';
   const touchableInputStyle = 'flex-row items-center border border-gray-300 rounded-xl px-4 py-3 bg-gray-50 mb-4';
-  const user =  useAuthStore((state) => state.user);
+  const user = useAuthStore((state) => state.user);
 
   useEffect(() => {
     const fetchCities = async () => {
@@ -327,41 +328,44 @@ export default function AddTripScreen({ navigation }: { navigation: any }) {
     };
 
   }, [])
-  const handleAddTripPress = () => {
-    try {
-      const response = axios.post(ENDPOINTS.ADDTRIP, {
-        "user_id": user?.id || -99999,
-        "ticket_number": "string",
-        "start_point_id": startLocation || -99999,
-        "end_point_id": destinationLocation || -99999,
-        "ticket_image_url": "string",
-        "start_point_time": pickupTime.toISOString(),
-        "end_point_time": dropTime.toISOString(),
-        "status_id": 0,
-        "weight_capacity": weight,
-        "start_pin_code": startPincode.toString(),
-        "end_pin_code": destinationPincode.toString(),
-        "pickup_point": pickupPoint || "null",
-        "start_date": travelDate.toISOString(),
-        "end_date": "2025-07-20",
-        "start_location": startLocation?.toString() || "null",
-        "end_location": destinationLocation?.toString() || "null",
-        "shipment_ids": [
-          {
-            "id": 0,
-            "amount": 0
-          }
-        ]
-      })
-    }
-    catch (error) {
+  const handleAddTripPress = async () => {
 
+    if (!travelDate
+      || !dropDate
+      || !pickupTime
+      || !dropTime
+      || !startPincode
+      || !startLocation
+      || !pickupPoint
+      || !destinationPincode
+      || !destinationLocation
+      || !dropPoint
+      || !weight
+      || !ticketFile) {
+
+      Alert.alert('Error', 'Please fill in all required fields before submitting your trip.');
+      return;
     }
+    setTripDetailsToConfirm({
+      travelDate: travelDate.toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' }),
+      dropDate: dropDate.toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' }),
+      pickupTime: pickupTime.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }),
+      dropTime: dropTime.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }),
+      ticketFileName: ticketFile.name || ticketFile.uri.split('/').pop() || 'No file selected',
+      weight,
+      startPincode,
+      startLocation: cities?.at(startLocation - 1)?.place || '',
+      pickupPoint,
+      destinationPincode,
+      destinationLocation: cities?.at(destinationLocation - 1)?.place || '',
+      dropPoint,
+    });
+    setShowConfirmationModal(true);
 
   }
   const onDateChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
     setShowDatePicker(false);
-    if (selectedDate) setTravelDate(selectedDate);
+    if (event.type === 'set' && selectedDate) setTravelDate(selectedDate);
   };
 
   const onDropDateChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
@@ -458,49 +462,118 @@ export default function AddTripScreen({ navigation }: { navigation: any }) {
 
 
 
-  const confirmSubmission = () => {
+  const confirmSubmission = async () => {
     setShowConfirmationModal(false);
-
     Keyboard.dismiss();
+    const userId = 1;
 
-    console.log('Trip Confirmed and Submitted:', tripDetailsToConfirm);
+    try {
+      console.log("user?.id", user?.id);
+      console.log("startLocation", startLocation);
+      console.log("destinationLocation", destinationLocation);
+      console.log("pickupTime", pickupTime);
+      console.log("pickupTime?.toISOString", pickupTime?.toISOString?.());
+      console.log("dropTime", dropTime);
+      console.log("dropTime?.toISOString", dropTime?.toISOString?.());
+      console.log("travelDate", travelDate);
+      console.log("travelDate?.toISOString", travelDate?.toISOString?.());
+      console.log("startPincode", startPincode);
+      console.log("destinationPincode", destinationPincode);
+      console.log("pickupPoint", pickupPoint);
+      console.log("weight", weight);
 
-    setShowSuccessAnimation(true);
-    Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 500,
-        easing: Easing.ease,
-        useNativeDriver: true,
-      }),
-      Animated.spring(scaleAnim, {
-        toValue: 1,
-        friction: 4,
-        tension: 50,
-        useNativeDriver: true,
-      }),
-    ]).start(() => {
-      setTimeout(() => {
+      Alert.alert(
+        "Debug Info",
+        `
+        user?.id: ${userId}
+        startLocation: ${startLocation}
+        destinationLocation: ${destinationLocation}
+        pickupTime: ${pickupTime}
+        pickupTime.toISOString: ${pickupTime?.toISOString?.()}
+        dropTime: ${dropTime}
+        dropTime.toISOString: ${dropTime?.toISOString?.()}
+        travelDate: ${travelDate}
+        travelDate.toISOString: ${travelDate?.toISOString?.()}
+        startPincode: ${startPincode}
+        destinationPincode: ${destinationPincode}
+        pickupPoint: ${pickupPoint}
+        weight: ${weight}
+        `
+      );
+      
+      const payload = {
+        user_id: userId,
+        ticket_number: "string",
+        start_point_id: startLocation ?? -99999,
+        end_point_id: destinationLocation ?? -99999,
+        ticket_image_url: "string",
+        start_point_time: pickupTime?.toISOString?.() ?? new Date().toISOString(),
+        end_point_time: dropTime?.toISOString?.() ?? new Date().toISOString(),
+        status_id: 0,
+        weight_capacity: weight ?? 0,
+        start_pin_code: startPincode?.toString?.() ?? "000000",
+        end_pin_code: destinationPincode?.toString?.() ?? "000000",
+        pickup_point: pickupPoint ?? "N/A",
+        start_date: travelDate?.toISOString?.() ?? new Date().toISOString(),
+        end_date: "2025-07-20",
+        start_location: startLocation?.toString?.() ?? "N/A",
+        end_location: destinationLocation?.toString?.() ?? "N/A",
+        shipment_ids: [
+          {
+            id: 0,
+            amount: 0,
+          },
+        ],
+      };
+
+      const response = await axios.post(ENDPOINTS.ADDTRIP, payload);
+      console.log("Success", response.data);
+      if (response.status == 200) {
+        clearTripDetails();
+        setShowSuccessAnimation(true);
         Animated.parallel([
           Animated.timing(fadeAnim, {
-            toValue: 0,
+            toValue: 1,
             duration: 500,
             easing: Easing.ease,
             useNativeDriver: true,
           }),
-          Animated.timing(scaleAnim, {
-            toValue: 0.7,
-            duration: 500,
-            easing: Easing.ease,
+          Animated.spring(scaleAnim, {
+            toValue: 1,
+            friction: 4,
+            tension: 50,
             useNativeDriver: true,
           }),
         ]).start(() => {
-          setShowSuccessAnimation(false);
-          clearTripDetails();
-          Alert.alert('Success!', 'Your trip has been added. Ready for a new one!');
+          setTimeout(() => {
+            Animated.parallel([
+              Animated.timing(fadeAnim, {
+                toValue: 0,
+                duration: 500,
+                easing: Easing.ease,
+                useNativeDriver: true,
+              }),
+              Animated.timing(scaleAnim, {
+                toValue: 0.7,
+                duration: 500,
+                easing: Easing.ease,
+                useNativeDriver: true,
+              }),
+            ]).start(() => {
+              setShowSuccessAnimation(false);
+              clearTripDetails();
+              Alert.alert('Success!', 'Your trip has been added. Ready for a new one!');
+            });
+          }, 1500);
         });
-      }, 1500);
-    });
+      }
+    } catch (error: any) {
+      console.error("Error payload:", error);
+      Alert.alert("Error", "Something went wrong. Check console logs.");
+    }
+
+
+
   };
 
 
@@ -532,7 +605,7 @@ export default function AddTripScreen({ navigation }: { navigation: any }) {
           Add Your Trip
         </Text>
         <View style={{ width: 24, height: 24 }} />
-       
+
       </View>
 
       {/* Scrollable Content Container: KeyboardAvoidingView wraps ScrollView */}
@@ -541,13 +614,14 @@ export default function AddTripScreen({ navigation }: { navigation: any }) {
         style={{ flex: 1 }}
         keyboardVerticalOffset={0}
       >
-              <TouchableWithoutFeedback onPress={() => Keyboard.dismiss}>
+
 
         <ScrollView
           className="flex-1 bg-gray-50"
           contentContainerStyle={{ padding: 16, paddingBottom: 120 }}
           keyboardShouldPersistTaps="handled"
         >
+
           {/* Travel Information */}
           <View className="bg-white rounded-xl shadow-md p-5 mb-6">
             <Text className="text-lg font-semibold text-gray-800 mb-4">Travel Information</Text>
@@ -559,16 +633,32 @@ export default function AddTripScreen({ navigation }: { navigation: any }) {
               </Text>
             </TouchableOpacity>
             {showDatePicker && (
-              <View style={Platform.OS === 'ios' ? { height: 280 } : null}>
-                <DateTimePicker
-                  value={travelDate}
-                  mode="date"
-                  display={Platform.OS === 'ios' ? 'inline' : 'default'}
-                  minimumDate={new Date()}
-                  onChange={onDateChange}
-                />
-              </View>
+              <Modal transparent animationType="slide">
+                <View className="flex-1 justify-end bg-black/30">
+                  <View className="bg-white p-4 rounded-t-2xl">
+                    {/* Your Date Picker */}
+                    <View style={Platform.OS === 'ios' ? { height: 280 } : undefined}>
+                      <DateTimePicker
+                        value={travelDate}
+                        mode="date"
+                        display={Platform.OS === 'ios' ? 'inline' : 'default'}
+                        minimumDate={new Date()}
+                        onChange={onDateChange}
+                      />
+                    </View>
+
+                    {/* Close Button */}
+                    <TouchableOpacity
+                      onPress={() => setShowDatePicker(false)}
+                      className="mb-2 bg-gray-200 py-2 rounded-lg items-center"
+                    >
+                      <Text className="text-black font-medium">Close</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </Modal>
             )}
+
 
             <TextInput
               className={inputStyle}
@@ -607,7 +697,7 @@ export default function AddTripScreen({ navigation }: { navigation: any }) {
                 <DateTimePicker
                   value={pickupTime}
                   mode="time"
-                  display={Platform.OS === 'ios' ? 'inline' : 'default'}
+                  display={Platform.OS === 'ios' ? 'inline' : 'spinner'}
                   onChange={onPickupTimeChange}
                 />
               </View>
@@ -625,17 +715,30 @@ export default function AddTripScreen({ navigation }: { navigation: any }) {
               </Text>
             </TouchableOpacity>
             {showDropDatePicker && (
-              <View style={Platform.OS === 'ios' ? { height: 280 } : null}>
-                <DateTimePicker
-                  value={dropDate}
-                  mode="date"
-                  display={Platform.OS === 'ios' ? 'inline' : 'default'}
-                  minimumDate={travelDate}
-                  onChange={onDropDateChange}
-                />
-              </View>
+              <Modal transparent animationType="slide">
+                <View className="flex-1 justify-end bg-black/30">
+                  <View className="bg-white p-4 rounded-t-2xl">
+                    {/* Your Date Picker */}
+                    <View style={Platform.OS === 'ios' ? { height: 280 } : undefined}>
+                      <DateTimePicker
+                        value={dropDate}
+                        mode="date"
+                        display={Platform.OS === 'ios' ? 'inline' : 'default'}
+                        minimumDate={travelDate}
+                        onChange={onDropDateChange}
+                      />
+                    </View>
+                    {/* Close Button */}
+                    <TouchableOpacity
+                      onPress={() => setShowDropDatePicker(false)}
+                      className="mb-2 bg-gray-200 py-2 rounded-lg items-center"
+                    >
+                      <Text className="text-black font-medium">Close</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </Modal>
             )}
-
             <TextInput
               className={inputStyle}
               keyboardType="numeric"
@@ -676,7 +779,7 @@ export default function AddTripScreen({ navigation }: { navigation: any }) {
                 <DateTimePicker
                   value={dropTime}
                   mode="time"
-                  display={Platform.OS === 'ios' ? 'inline' : 'default'}
+                  display={Platform.OS === 'ios' ? 'inline' : 'spinner'}
                   onChange={onDropTimeChange}
                 />
               </View>
@@ -742,12 +845,12 @@ export default function AddTripScreen({ navigation }: { navigation: any }) {
           {/* Submit Button */}
           <TouchableOpacity
             className="bg-airbnb-primary py-4 rounded-xl items-center mx-4 shadow-lg"
-            onPress={handleSubmit}
+            onPress={handleAddTripPress}
           >
             <Text className="text-white font-bold text-lg">Submit Trip</Text>
           </TouchableOpacity>
         </ScrollView>
-        </TouchableWithoutFeedback>
+
       </KeyboardAvoidingView>
       {/* Confirmation Modal */}
       <Modal
@@ -801,10 +904,10 @@ export default function AddTripScreen({ navigation }: { navigation: any }) {
                     <View key={key} className="flex-row items-center mb-3">
                       {icon && <FontAwesomeIcon icon={icon} size={16} color="#4A5568" />} {/* Added mr-3 here */}
                       <Text className="text-gray-700 text-base font-semibold pl-4">
-                        {label}:
+                      {label}:
                       </Text>
                       <Text className="text-gray-900 text-base ml-2 flex-1 font-bold">
-                        {value}
+                      {String(value)}
                       </Text>
                     </View>
                   );
@@ -884,41 +987,43 @@ export default function AddTripScreen({ navigation }: { navigation: any }) {
       />
 
       {/* Success Animation Overlay */}
-      {showSuccessAnimation && (
-        <Animated.View
-          style={{
-            position: 'absolute',
-            top: 0,
-            bottom: 0,
-            left: 0,
-            right: 0,
-            backgroundColor: 'rgba(0,0,0,0.7)',
-            justifyContent: 'center',
-            alignItems: 'center',
-            opacity: fadeAnim,
-            zIndex: 100,
-          }}
-        >
+      {
+        showSuccessAnimation && (
           <Animated.View
             style={{
-              transform: [{ scale: scaleAnim }],
-              backgroundColor: 'white',
-              padding: 40,
-              borderRadius: 100,
-              alignItems: 'center',
+              position: 'absolute',
+              top: 0,
+              bottom: 0,
+              left: 0,
+              right: 0,
+              backgroundColor: 'rgba(0,0,0,0.7)',
               justifyContent: 'center',
-              shadowColor: '#000',
-              shadowOffset: { width: 0, height: 10 },
-              shadowOpacity: 0.3,
-              shadowRadius: 20,
-              elevation: 15,
+              alignItems: 'center',
+              opacity: fadeAnim,
+              zIndex: 100,
             }}
           >
-            <FontAwesomeIcon icon={faCheckCircle} size={80} color="#4CAF50" />
-            <Text className="text-xl font-bold text-gray-800 mt-4">Trip Added!</Text>
+            <Animated.View
+              style={{
+                transform: [{ scale: scaleAnim }],
+                backgroundColor: 'white',
+                padding: 40,
+                borderRadius: 100,
+                alignItems: 'center',
+                justifyContent: 'center',
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 10 },
+                shadowOpacity: 0.3,
+                shadowRadius: 20,
+                elevation: 15,
+              }}
+            >
+              <FontAwesomeIcon icon={faCheckCircle} size={80} color="#4CAF50" />
+              <Text className="text-xl font-bold text-gray-800 mt-4">Trip Added!</Text>
+            </Animated.View>
           </Animated.View>
-        </Animated.View>
-      )}
-    </SafeAreaView>
+        )
+      }
+    </SafeAreaView >
   );
 }

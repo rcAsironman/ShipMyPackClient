@@ -6,8 +6,8 @@ export const SOCKET_URL = SERVER_URL;
 
 // API Endpoints
 export const ENDPOINTS = {
-  LOGIN: `${SERVER_URL}/api/auth/login`,
-  REGISTER: `${SERVER_URL}/api/auth/register`,
+  LOGIN: `${SERVER_URL}/SMP/user/login`,
+  REGISTER: `${SERVER_URL}/SMP/user/register`,
   FORGOT_PASSWORD: `${SERVER_URL}/api/auth/forgot-password`,
   RESET_PASSWORD: `${SERVER_URL}/api/auth/reset-password`,
   VERIFY_OTP: `${SERVER_URL}/api/auth/verify-otp`,

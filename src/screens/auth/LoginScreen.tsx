@@ -13,7 +13,8 @@ import {
   NativeSyntheticEvent,
   TextInputKeyPressEventData,
   Image,
-  ActivityIndicator, // For loading indicators
+  ActivityIndicator,
+  Alert, // For loading indicators
 } from 'react-native';
 import CountryPicker, {
   Country,
@@ -24,6 +25,8 @@ import Toast from 'react-native-toast-message';
 // Corrected import path based on your screenshot
 import { useFirebaseOTP } from '../../hooks/useFirebaseOTP';
 import { useAuthStore } from '../../store/authStore';
+import axios from 'axios';
+import { ENDPOINTS } from '../../constants/constants';
 
 // Dummy navigation prop type - replace with your actual navigation stack types if you have them
 type LoginScreenProps = {
@@ -47,21 +50,33 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
     region: 'Asia',
     subregion: 'Southern Asia',
   });
+  const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
 
+  const login = useAuthStore((state) => state.login);
+
+  useEffect(() => {
+    console.log("Country Code Changed:", countryCode, "Country:", country);
+  },[countryCode]);
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [password, setPassword] = useState('');
   const [isPickerVisible, setPickerVisible] = useState(false);
   const [timer, setTimer] = useState(0);
   const [otpSent, setOtpSent] = useState(false); // Tracks if OTP was successfully sent
-
+  const [isUserLogged, setIsUserLogged] = useState(isLoggedIn); // Track if user is logged in
   // Destructure the hook values
   const { sendOTP, verifyCode, error, verificationInProgress } = useFirebaseOTP();
 
   // Array of refs for OTP input fields for auto-focus
   const otpRefs = Array.from({ length: 6 }, () => useRef<TextInput>(null));
 
-  // Get the login action from Zustand store
-  const login = useAuthStore((state) => state.login);
+
+
+  useEffect(() => {
+    if(isUserLogged && isLoggedIn){
+      navigation.navigate('Home'); // Navigate to Home if user is logged in
+      return;
+    }
+  },[isUserLogged])
 
   // Timer effect for OTP resend
   useEffect(() => {
@@ -77,7 +92,20 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
     return () => clearInterval(interval); // Cleanup on unmount or dependency change
   }, [otpSent, timer]);
 
-  // Handle OTP digit changes and auto-focus
+
+  const handleLoadingUntilUserLogged = () => {
+     if(isLoggedIn){
+      setIsUserLogged(isLoggedIn)
+      
+     }
+     else{
+      setTimeout(() => {
+        handleLoadingUntilUserLogged(); // Retry after a delay
+      }, 3000); // Adjust the delay as needed
+     }
+  }
+
+   // Handle OTP digit changes and auto-focus
   const handleOtpChange = (val: string, index: number) => {
     const newOtp = [...otp];
     newOtp[index] = val;
@@ -125,7 +153,7 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
   // Handle sending OTP to the entered mobile number
   const handleSendOtp = async () => {
     if(Platform.OS === 'ios'){
-      await login({id: "1", name: "Karthik", email: "karthik@shipmypack.com"}); // Ensure user is logged in before sending OTP on iOS
+      // await login({id: "1", name: "Karthik", email: "karthik@shipmypack.com"}); // Ensure user is logged in before sending OTP on iOS
     }
     Keyboard.dismiss(); // Dismiss keyboard when sending OTP
     const rawMobile = mobile.trim();
@@ -170,7 +198,14 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
   // Handle main login action (OTP verification or password login)
   const handleLogin = async () => {
     Keyboard.dismiss(); // Dismiss keyboard when performing login action
-
+    if(mobile.length< 10){
+      Toast.show({
+        type: 'error',
+        text1: 'Invalid Mobile Number',
+        text2: 'Please enter a valid mobile number.',
+      });
+      return;
+    }
     if (mode === 'otp') {
       const code = otp.join('');
       if (code.length !== 6) {
@@ -191,7 +226,7 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
           // Clear OTP input fields for new OTP and focus first one AFTER sending
           setOtp(['', '', '', '', '', '']);
           otpRefs[0].current?.focus();
-          await login({id: "1", name: "Karthik", email: "karthik@shipmypack.com"}); // This correctly calls the login action in your Zustand store
+          // await login({id: "1", name: "Karthik", email: "karthik@shipmypack.com"}); // This correctly calls the login action in your Zustand store
         }
         // No 'else' needed here, as the hook handles error toasts
       } catch (err) {
@@ -200,19 +235,56 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
       }
     } else if (mode === 'password') {
       // Implement your password login logic here
-      console.log('Attempting password login with:', password);
-      Toast.show({
-        type: 'info',
-        text1: 'Password Login',
-        text2: 'Password login functionality not implemented in this example.',
+      if(!password || password.length < 6) {
+        Toast.show({
+          type: 'error',
+          text1: 'Invalid Password',
+          text2: 'Please enter a valid password (minimum 6 characters).',
+        });
+        return;
+      }
+     try{
+      const response = await axios.post(ENDPOINTS.LOGIN, {
+        "mbl_num": mobile?.toString(),
+        "password": password?.toString()
       });
-      // Example: Call an API for password login
-      // if (password === 'mysecurepass') {
-      //   Toast.show({ type: 'success', text1: 'Password Login Successful!' });
-      //   navigation.navigate('Home');
-      // } else {
-      //   Toast.show({ type: 'error', text1: 'Password Login Failed', text2: 'Invalid password.' });
-      // }
+      console.log("Login response:", response);
+    
+    
+      if(response.status === 200){
+        // Assuming the response contains user data
+        const user = response?.data?.user;
+      const authToken = response.data?.token; // Adjust based on your API response structure
+
+        console.log("user obj ",user)
+        await login({
+          id: user.id.toString(),
+          authToken: authToken, 
+          email: user.email?.toString(),
+          mobile: user.mbl_num?.toString(),
+          firstName: user.first_name?.toString(),
+          lastName: user.last_name?.toString(),
+        }); // Call the login action from Zustand store
+        Toast.show({
+          type: 'success',
+          text1: 'Login Successful',
+          text2: `Welcome back, ${user.first_name}!`,
+        });
+        
+        handleLoadingUntilUserLogged();
+        // Navigate to home screen after successful login
+      }
+     }
+     catch(error: any){
+        console.error("Error during password login:", error);
+        Toast.show({
+          type: 'error',
+          text1: 'Login Failed',
+          text2: `${error?.message  || 'Please try again.'}`,
+        });
+     }
+      
+      
     }
   };
 
