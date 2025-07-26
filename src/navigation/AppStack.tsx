@@ -13,6 +13,7 @@ import SenderCompleted from '../screens/SenderCompleted';
 import ShipNowScreen from '../screens/ShipNowScreen';
 import AllShipmentsScreen from '../screens/AllShipmentsScreen';
 import TransactionFullScreen from '../screens/TransactionFullScreen';
+import AddTripSuccessScree from '../screens/successScreens.tsx/AddTripSuccessScree';
 
 const Stack = createNativeStackNavigator();
 
@@ -31,6 +32,7 @@ export default function AppStack() {
       <Stack.Screen name="ShipNowScreen" component={ShipNowScreen}/>
       <Stack.Screen name="AllShipmentsScreen" component={AllShipmentsScreen} />
       <Stack.Screen name="TransactionFullScreen" component={TransactionFullScreen} />
+      <Stack.Screen name="AddTripSuccess" component={AddTripSuccessScree}/>
       {/* Add more non-tab screens here */}
     </Stack.Navigator>
   );

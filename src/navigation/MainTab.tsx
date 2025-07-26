@@ -16,10 +16,11 @@ import {
   faWallet,
   faUser,
 } from '@fortawesome/free-solid-svg-icons';
+import AddTripSuccessScree from '../screens/successScreens.tsx/AddTripSuccessScree';
 
 const { width: screenWidth } = Dimensions.get('window');
-const tabBarWidth = screenWidth * 0.9;
-const tabBarLeft = (screenWidth - tabBarWidth) / 2;
+// const tabBarWidth = screenWidth * 0.9; // You can still use this if you want a specific width percentage
+// const tabBarLeft = (screenWidth - tabBarWidth) / 2; // And this for calculated left offset
 
 const Tab = createBottomTabNavigator();
 
@@ -30,7 +31,7 @@ export default function MainTabs() {
         headerShown: false,
         tabBarShowLabel: true,
         tabBarIcon: ({ focused, color, size }) => {
-          let icon;
+          let icon = faHome; // Default icon
 
           switch (route.name) {
             case 'Home':
@@ -48,6 +49,8 @@ export default function MainTabs() {
             case 'Profile':
               icon = faUser;
               break;
+            default:
+              icon = faHome; // Fallback icon
           }
 
           return (
@@ -61,24 +64,9 @@ export default function MainTabs() {
         tabBarLabel: route.name,
         tabBarActiveTintColor: 'black',
         tabBarInactiveTintColor: 'gray',
-        tabBarStyle: {
-          position: 'absolute',
-          bottom: 50,
-          left: tabBarLeft,
-          width: tabBarWidth,
-          height: 70,
-          backgroundColor: 'white',
-          borderRadius: 30,
-          borderWidth: 2,
-          marginInline: '4.5%',
-          paddingBottom: Platform.OS === 'ios' ? 20 : 10,
-          paddingTop: 10,
-          elevation: 5,
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: 0.1,
-          shadowRadius: 6,
-        },
+       tabBarStyle: {
+        paddingTop: 10
+       },
       })}
     >
       <Tab.Screen name="Home" component={HomeScreen} />

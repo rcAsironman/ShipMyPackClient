@@ -11,6 +11,7 @@ import { ENDPOINTS } from '../constants/constants';
 import { useSocket } from '../context/SocketProvider';
 import AvailableShipments from '../components/AvailableShipments';
 import LottieView from 'lottie-react-native';
+import { useAuthStore } from '../store/authStore';
 
 // import AvailableShipments from '../components/AvailableShipments';
 
@@ -26,8 +27,11 @@ interface CarouselItem {
 
 // Carousel configuration
 const HomeScreen = ({ navigation }: { navigation: any }) => {
+
+
+  const user = useAuthStore(state => state.user);
   const socket = useSocket();
-  const userName = 'Karthik';
+  const userName = user?.firstName || "user";
   const earnings = 1234;
   const [carouselImages, setCarouselImages] = useState<CarouselItem[]>([]);
 

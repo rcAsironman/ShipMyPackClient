@@ -79,7 +79,12 @@ const initialPaymentMethods: PaymentMethod[] = [
 ];
 
 const ProfileScreen = ({ navigation }: { navigation: any }) => {
+  //user object from local
+  const user = useAuthStore((state) => state.user);
+
   const insets = useSafeAreaInsets();
+  const [userName, setUserName] = useState(user?.firstName); // Example user name
+  const [mobile, setMobile] = useState(user?.mobile); // Example mobile number
   const [imagePreviewModalVisible, setImagePreviewModalVisible] = useState(false);
   // Initialize with a default profile picture or keep it empty if dynamic
   const [currentProfilePictureUri, setCurrentProfilePictureUri] = useState(''); // Example default image
@@ -96,8 +101,7 @@ const ProfileScreen = ({ navigation }: { navigation: any }) => {
   const logout = useAuthStore((state) => state.logout);
 
 
-  //user object from local
-  const user = useAuthStore((state) => state.user);
+  
 
   useEffect(()=>{
     console.log("user in profile screen", user);
@@ -589,8 +593,8 @@ const ProfileScreen = ({ navigation }: { navigation: any }) => {
 
               {/* Name and Phone Number */}
               <View className="flex-1 justify-center">
-                <Text className="text-xl font-bold text-[#212121] mb-0.5">John Doe</Text>
-                <Text className="text-base text-[#666666]">+91-9989348841</Text>
+                <Text className="text-xl font-bold text-[#212121] mb-0.5">{userName}</Text>
+                <Text className="text-base text-[#666666]">{mobile}</Text>
               </View>
             </View>
           </View>
