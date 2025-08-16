@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
   View,
-  Text,
   FlatList,
   TouchableOpacity,
   StyleSheet,
@@ -32,7 +31,7 @@ import {
   faMoneyBillTransfer,
   faReceipt
 } from '@fortawesome/free-solid-svg-icons';
-
+import Text from '../components/Text';
 import Animated, {
   useSharedValue,
   withTiming,

@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
-  Text,
   Switch,
   FlatList,
   Animated,
@@ -21,6 +20,7 @@ import {
   faExclamationTriangle,
 } from '@fortawesome/free-solid-svg-icons';
 import Svg, { Path, Circle } from 'react-native-svg';
+import Text from '../components/Text';
 
 // --- Type Definitions ---
 // IMPORTANT: Keep these type definitions consistent across files if possible,

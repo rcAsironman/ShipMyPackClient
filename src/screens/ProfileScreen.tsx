@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
-  Text,
   ScrollView,
   TouchableOpacity,
   Platform,
@@ -37,6 +36,7 @@ import {
 import { Modalize } from 'react-native-modalize';
 import { launchImageLibrary, launchCamera, Asset } from 'react-native-image-picker'; // Keep launchCamera as it might be useful in the future, even if not directly used now for profile pic
 import { useAuthStore } from '../store/authStore';
+import Text from '../components/Text';
 
 // Get screen dimensions for responsive layout and full-screen modal
 const { height: screenHeight, width: screenWidth } = Dimensions.get('window');

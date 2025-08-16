@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, useCallback } from 'react';
 import {
   View,
   FlatList,
@@ -6,18 +6,20 @@ import {
   StyleSheet,
   Animated,
   TouchableOpacity,
-  ActivityIndicator,
   Modal,
-  Text,
   Image as RNImage,
+  Platform,
 } from 'react-native';
-import FastImage from 'react-native-fast-image'; // Optional, fallback provided
+import FastImage from 'react-native-fast-image';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faTimesCircle } from '@fortawesome/free-solid-svg-icons';
+import Text from './Text';
 
-const { width } = Dimensions.get('window');
-const ITEM_SPACING = 16;
-const ITEM_WIDTH = width * 0.9;
+const { width: screenWidth } = Dimensions.get('window');
+
+const ITEM_WIDTH = screenWidth * 0.9;
+const ITEM_HORIZONTAL_PADDING = (screenWidth - ITEM_WIDTH) / 2;
+const SNAP_INTERVAL = ITEM_WIDTH;
 
 export interface CarouselItem {
   id: number;
@@ -29,66 +31,74 @@ interface InfiniteCarouselProps {
 }
 
 export default function InfiniteCarousel({ imagesData }: InfiniteCarouselProps) {
-  const scrollX = useRef(new Animated.Value(0)).current;
   const flatListRef = useRef<FlatList<CarouselItem>>(null);
-  const [activeIndex, setActiveIndex] = useState(imagesData.length > 1 ? 1 : 0);
+  const scrollX = useRef(new Animated.Value(0)).current;
+  const [activeIndex, setActiveIndex] = useState(0);
   const [modalVisible, setModalVisible] = useState(false);
   const [modalImage, setModalImage] = useState<string | null>(null);
 
-  // Create looped images array
-  const images = imagesData.length > 1
-    ? [
-        imagesData[imagesData.length - 1],
-        ...imagesData,
-        imagesData[0],
-      ]
-    : [...imagesData];
+  const shouldLoop = imagesData.length > 1;
 
-  // Scroll to initial position
+  const images = shouldLoop
+    ? [imagesData[imagesData.length - 1], ...imagesData, imagesData[0]]
+    : imagesData;
+
   useEffect(() => {
-    if (imagesData.length > 1) {
+    if (shouldLoop) {
       setTimeout(() => {
-        flatListRef.current?.scrollToIndex({ index: 1, animated: false });
+        flatListRef.current?.scrollToOffset({
+          offset: SNAP_INTERVAL,
+          animated: false,
+        });
       }, 50);
     }
-  }, [imagesData.length]);  
+  }, [shouldLoop]);
 
-  // Auto-scroll every 3s
   useEffect(() => {
-    if (imagesData.length <= 1) return;
-  
+    if (!shouldLoop) return;
+
     const interval = setInterval(() => {
-      const nextIndex = activeIndex + 1;
-      flatListRef.current?.scrollToIndex({
-        index: nextIndex,
+      let nextIndex = activeIndex + 2;
+
+      if (nextIndex >= images.length) {
+        flatListRef.current?.scrollToOffset({
+          offset: SNAP_INTERVAL,
+          animated: false,
+        });
+        nextIndex = 2;
+      }
+
+      flatListRef.current?.scrollToOffset({
+        offset: nextIndex * SNAP_INTERVAL,
         animated: true,
       });
     }, 3000);
-  
-    return () => clearInterval(interval);
-  }, [activeIndex, imagesData.length]);
-  
 
-  // Infinite scroll logic
-  const handleMomentumScrollEnd = (e: any) => {
-    if (imagesData.length <= 1) return; // Skip handling
-  
+    return () => clearInterval(interval);
+  }, [activeIndex]);
+
+  const handleMomentumScrollEnd = useCallback((e) => {
+    if (!shouldLoop) return;
+
     const offsetX = e.nativeEvent.contentOffset.x;
-    const index = Math.round(offsetX / (ITEM_WIDTH + ITEM_SPACING));
-  
-    let newIndex = index;
-  
-    if (index === 0) {
-      newIndex = imagesData.length;
-      flatListRef.current?.scrollToIndex({ index: newIndex, animated: false });
-    } else if (index === images.length - 1) {
-      newIndex = 1;
-      flatListRef.current?.scrollToIndex({ index: newIndex, animated: false });
+    const snappedIndex = Math.round(offsetX / SNAP_INTERVAL);
+
+    if (snappedIndex === 0) {
+      flatListRef.current?.scrollToOffset({
+        offset: imagesData.length * SNAP_INTERVAL,
+        animated: false,
+      });
+      setActiveIndex(imagesData.length - 1);
+    } else if (snappedIndex === images.length - 1) {
+      flatListRef.current?.scrollToOffset({
+        offset: SNAP_INTERVAL,
+        animated: false,
+      });
+      setActiveIndex(0);
+    } else {
+      setActiveIndex(snappedIndex - 1);
     }
-  
-    setActiveIndex(newIndex);
-  };
-  
+  }, []);
 
   const openModal = (uri: string) => {
     setModalImage(uri);
@@ -100,6 +110,53 @@ export default function InfiniteCarousel({ imagesData }: InfiniteCarouselProps) 
     setModalImage(null);
   };
 
+  const viewabilityConfigCallbackPairs = useRef([{
+    viewabilityConfig: {
+      itemVisiblePercentThreshold: 50,
+      minimumViewTime: 100,
+    },
+    onViewableItemsChanged: ({ viewableItems }: any) => {
+      const visible = viewableItems.find(item => item.isViewable);
+      if (!visible || visible.index == null) return;
+
+      const currentIndex = visible.index;
+      const index = currentIndex === 0
+        ? imagesData.length - 1
+        : currentIndex === images.length - 1
+        ? 0
+        : currentIndex - 1;
+
+      setActiveIndex(index);
+    }
+  }]);
+
+  if (imagesData.length === 0) {
+    return (
+      <View style={styles.carouselWrapperEmpty}>
+        <Text style={styles.emptyText}>No images to display.</Text>
+      </View>
+    );
+  }
+
+  if (imagesData.length === 1) {
+    const item = imagesData[0];
+    return (
+      <View style={styles.carouselWrapper}>
+        <TouchableOpacity
+          activeOpacity={0.9}
+          onPress={() => openModal(item.uri)}
+          style={styles.imageContainerSingle}
+        >
+          {FastImage ? (
+            <FastImage source={{ uri: item.uri }} style={styles.image} resizeMode="cover" />
+          ) : (
+            <RNImage source={{ uri: item.uri }} style={styles.image} resizeMode="cover" />
+          )}
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.carouselWrapper}>
       <Animated.FlatList
@@ -108,33 +165,33 @@ export default function InfiniteCarousel({ imagesData }: InfiniteCarouselProps) 
         horizontal
         keyExtractor={(item, index) => `${item.id}-${index}`}
         showsHorizontalScrollIndicator={false}
-        pagingEnabled
-        snapToInterval={ITEM_WIDTH + ITEM_SPACING}
+        pagingEnabled={false}
+        snapToInterval={SNAP_INTERVAL}
+        snapToAlignment="center"
         decelerationRate="fast"
-        contentContainerStyle={{ paddingHorizontal: ITEM_SPACING / 2 }}
+        contentContainerStyle={styles.flatListContentMulti}
         onScroll={Animated.event(
           [{ nativeEvent: { contentOffset: { x: scrollX } } }],
           { useNativeDriver: false }
         )}
         onMomentumScrollEnd={handleMomentumScrollEnd}
+        viewabilityConfigCallbackPairs={viewabilityConfigCallbackPairs.current}
+        getItemLayout={(data, index) => ({
+          length: SNAP_INTERVAL,
+          offset: SNAP_INTERVAL * index,
+          index,
+        })}
         renderItem={({ item }) => (
           <TouchableOpacity
             activeOpacity={0.9}
             onPress={() => openModal(item.uri)}
+            style={styles.itemWrapper}
           >
             <View style={styles.imageContainer}>
               {FastImage ? (
-                <FastImage
-                  source={{ uri: item.uri }}
-                  style={styles.image}
-                  resizeMode={FastImage.resizeMode.cover}
-                />
+                <FastImage source={{ uri: item.uri }} style={styles.image} resizeMode="cover" />
               ) : (
-                <RNImage
-                  source={{ uri: item.uri }}
-                  style={styles.image}
-                  resizeMode="cover"
-                />
+                <RNImage source={{ uri: item.uri }} style={styles.image} resizeMode="cover" />
               )}
             </View>
           </TouchableOpacity>
@@ -142,38 +199,20 @@ export default function InfiniteCarousel({ imagesData }: InfiniteCarouselProps) 
       />
 
       <View style={styles.dotContainer}>
-        {imagesData.map((_, i) => {
-          const inputRange = [
-            (i) * (ITEM_WIDTH + ITEM_SPACING),
-            (i + 1) * (ITEM_WIDTH + ITEM_SPACING),
-            (i + 2) * (ITEM_WIDTH + ITEM_SPACING),
-          ];
-
-          const dotWidth = scrollX.interpolate({
-            inputRange,
-            outputRange: [8, 20, 8],
-            extrapolate: 'clamp',
-          });
-
-          const opacity = scrollX.interpolate({
-            inputRange,
-            outputRange: [0.4, 1, 0.4],
-            extrapolate: 'clamp',
-          });
-
-          return (
-            <Animated.View
-              key={i}
-              style={[
-                styles.dot,
-                { width: dotWidth, opacity },
-              ]}
-            />
-          );
-        })}
+        {imagesData.map((_, i) => (
+          <Animated.View
+            key={i}
+            style={[
+              styles.dot,
+              {
+                width: activeIndex === i ? 20 : 8,
+                opacity: activeIndex === i ? 1 : 0.4,
+              },
+            ]}
+          />
+        ))}
       </View>
 
-      {/* Modal Image Viewer */}
       <Modal visible={modalVisible} transparent onRequestClose={closeModal}>
         <View style={styles.modalContainer}>
           <TouchableOpacity style={styles.closeButton} onPress={closeModal}>
@@ -181,17 +220,9 @@ export default function InfiniteCarousel({ imagesData }: InfiniteCarouselProps) 
           </TouchableOpacity>
           {modalImage && (
             FastImage ? (
-              <FastImage
-                source={{ uri: modalImage }}
-                style={styles.modalImage}
-                resizeMode={FastImage.resizeMode.contain}
-              />
+              <FastImage source={{ uri: modalImage }} style={styles.modalImage} resizeMode="contain" />
             ) : (
-              <RNImage
-                source={{ uri: modalImage }}
-                style={styles.modalImage}
-                resizeMode="contain"
-              />
+              <RNImage source={{ uri: modalImage }} style={styles.modalImage} resizeMode="contain" />
             )
           )}
         </View>
@@ -203,15 +234,47 @@ export default function InfiniteCarousel({ imagesData }: InfiniteCarouselProps) 
 const styles = StyleSheet.create({
   carouselWrapper: {
     height: 220,
-    position: 'relative',
+    width: screenWidth,
+    alignSelf: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
   },
-  imageContainer: {
-    width: ITEM_WIDTH,
+  carouselWrapperEmpty: {
     height: 220,
-    marginRight: ITEM_SPACING,
+    width: ITEM_WIDTH,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f0f0f0',
+    borderRadius: 16,
+    marginVertical: 10,
+    alignSelf: 'center',
+  },
+  emptyText: {
+    color: '#666',
+    fontSize: 16,
+  },
+  flatListContentMulti: {
+    paddingHorizontal: ITEM_HORIZONTAL_PADDING,
+  },
+  itemWrapper: {
+    width: ITEM_WIDTH,
     borderRadius: 16,
     overflow: 'hidden',
+  },
+  imageContainer: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 16,
     backgroundColor: '#f0f0f0',
+    overflow: 'hidden',
+  },
+  imageContainerSingle: {
+    height: 220,
+    width: ITEM_WIDTH,
+    marginHorizontal: ITEM_HORIZONTAL_PADDING,
+    borderRadius: 16,
+    backgroundColor: '#f0f0f0',
+    overflow: 'hidden',
   },
   image: {
     width: '100%',
@@ -242,8 +305,11 @@ const styles = StyleSheet.create({
   },
   closeButton: {
     position: 'absolute',
-    top: 40,
+    top: Platform.OS === 'ios' ? 60 : 40,
     right: 20,
     zIndex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    borderRadius: 20,
+    padding: 5,
   },
 });

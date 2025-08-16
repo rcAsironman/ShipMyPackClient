@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   View,
-  Text,
   TextInput,
   ScrollView,
   TouchableOpacity,
@@ -49,10 +48,10 @@ import {
   MediaType,
   ImagePickerResponse,
 } from 'react-native-image-picker';
-
+import Text from '../components/Text';
 // Ensure this path is correct for your project setup
 import { cities } from '../data/cities';
-
+import DatePicker from 'react-native-date-picker';
 const { height: screenHeight } = Dimensions.get('window');
 
 interface VideoObject {
@@ -72,6 +71,10 @@ interface CityPickerModalProps {
   allCities: string[];
 }
 
+type locationsType = {
+  id: number;
+  place: string;
+}
 const CityPickerModal: React.FC<CityPickerModalProps> = ({
   isVisible,
   onClose,
@@ -132,6 +135,7 @@ const CityPickerModal: React.FC<CityPickerModalProps> = ({
 
     setDisplayCities(results);
   }, [searchText, excludedCity, allCities]);
+
 
   const handleCityPress = (city: string) => {
     onSelectCity(city);
@@ -786,28 +790,18 @@ export default function ShipNowScreen({ navigation }: { navigation: any }) {
               </Text>
             </TouchableOpacity>
             {showShippingDatePicker && (
-              <Modal
-                transparent={true}
-                animationType="fade"
-                visible={showShippingDatePicker}
-                onRequestClose={() => setShowShippingDatePicker(false)}
-              >
-                <TouchableOpacity
-                  style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.5)' }}
-                  activeOpacity={1}
-                  onPressOut={() => setShowShippingDatePicker(false)}
-                >
-                  <View style={Platform.OS === 'ios' ? { height: 280, backgroundColor: 'white', borderRadius: 10, overflow: 'hidden' } : {}}>
-                    <DateTimePicker
-                      value={shippingDate}
-                      mode="date"
-                      display={Platform.OS === 'ios' ? 'inline' : 'default'}
-                      minimumDate={new Date()}
-                      onChange={onShippingDateChange}
-                    />
-                  </View>
-                </TouchableOpacity>
-              </Modal>
+              <DatePicker
+                modal
+                mode="date"
+                open={showShippingDatePicker}
+                date={shippingDate}
+                minimumDate={new Date()}
+                onConfirm={(date) => {
+                  setShippingDate(date);
+                  setShowShippingDatePicker(false);
+                }}
+                onCancel={() => setShowShippingDatePicker(false)}
+              />
             )}
 
             <TextInput

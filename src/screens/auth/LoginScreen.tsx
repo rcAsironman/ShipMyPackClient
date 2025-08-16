@@ -2,7 +2,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
-  Text,
   TextInput,
   TouchableOpacity,
   KeyboardAvoidingView,
@@ -27,6 +26,7 @@ import { useFirebaseOTP } from '../../hooks/useFirebaseOTP';
 import { useAuthStore } from '../../store/authStore';
 import axios from 'axios';
 import { ENDPOINTS } from '../../constants/constants';
+import Text from '../../components/Text';
 
 // Dummy navigation prop type - replace with your actual navigation stack types if you have them
 type LoginScreenProps = {

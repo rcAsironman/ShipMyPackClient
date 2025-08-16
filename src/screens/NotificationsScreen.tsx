@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import {
   View,
-  Text,
   TouchableOpacity,
   StatusBar,
   Dimensions,
@@ -11,6 +10,7 @@ import { SwipeListView } from 'react-native-swipe-list-view';
 import { useNavigation } from '@react-navigation/native';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faArrowLeft, faBell, faTrash } from '@fortawesome/free-solid-svg-icons';
+import Text from '../components/Text';
 
 const MAX_MESSAGE_LENGTH = 70;
 const ROW_HEIGHT = 96;

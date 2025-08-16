@@ -2,7 +2,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
-  Text,
   TextInput,
   TouchableOpacity,
   KeyboardAvoidingView,
@@ -22,6 +21,7 @@ import CountryPicker, {
 } from 'react-native-country-picker-modal';
 import Toast from 'react-native-toast-message';
 import { useFirebaseOTP } from '../../hooks/useFirebaseOTP';
+import Text from '../../components/Text';
 
 export default function ForgotPasswordScreen({ navigation }: any) {
   const [mobile, setMobile] = useState('');

@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   View,
-  Text,
   TextInput,
   ScrollView,
   TouchableOpacity,
@@ -38,6 +37,7 @@ import {
   faSearch,
 } from '@fortawesome/free-solid-svg-icons';
 import { pick, types, isCancel, DocumentPickerResponse } from '@react-native-documents/picker';
+import Text from '../components/Text';
 
 import axios from 'axios';
 import { ENDPOINTS, SERVER_URL } from '../constants/constants';

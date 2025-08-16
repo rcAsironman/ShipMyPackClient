@@ -1,8 +1,9 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Dimensions, ViewStyle } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Dimensions, ViewStyle } from 'react-native';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faCalendarAlt, faClock, faBusSimple, faBoxOpen } from '@fortawesome/free-solid-svg-icons';
 import Svg, { Path, Circle } from 'react-native-svg';
+import Text from './Text';
 
 // --- Constants & Design Tokens ---
 const { width } = Dimensions.get('window');

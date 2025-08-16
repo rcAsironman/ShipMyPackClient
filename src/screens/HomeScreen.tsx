@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { StatusBar, View, Text, Image, TouchableOpacity, ScrollView, Dimensions, Platform, Animated, Alert } from 'react-native';
+import { StatusBar, View, Image, TouchableOpacity, ScrollView, Dimensions, Platform, Animated, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import ImageCarousel from '../components/ImageCarousel';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome'
@@ -12,6 +12,7 @@ import { useSocket } from '../context/SocketProvider';
 import AvailableShipments from '../components/AvailableShipments';
 import LottieView from 'lottie-react-native';
 import { useAuthStore } from '../store/authStore';
+import Text from '../components/Text';
 
 // import AvailableShipments from '../components/AvailableShipments';
 
