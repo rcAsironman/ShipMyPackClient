@@ -171,7 +171,7 @@ const HomeScreen = ({ navigation }: { navigation: any }) => {
 
             {/* Carousel */}
             {carouselImages?.length > 0 ? (
-              <ImageCarousel imagesData={carouselImages} />
+                <ImageCarousel imagesData={carouselImages} />
             ) : (
               <View style={{ height: 0, justifyContent: 'center', alignItems: 'center' }}>
 

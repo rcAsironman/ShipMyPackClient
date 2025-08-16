@@ -13,6 +13,7 @@ import AdvertisementPopup from './src/components/AdvertisementPopup';
 import axios from 'axios';
 import { ENDPOINTS } from './src/constants/constants';
 import { useAuthStore } from './src/store/authStore';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 
 type AdvertisementPopupProps = {
@@ -87,7 +88,9 @@ export default function App() {
             />
           </View>
         )}
+        <SafeAreaProvider>
         <RootNavigator />
+        </SafeAreaProvider>
       </SocketProvider>
     </GestureHandlerRootView>
   );

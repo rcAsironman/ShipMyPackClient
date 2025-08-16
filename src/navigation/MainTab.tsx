@@ -27,9 +27,15 @@ const Tab = createBottomTabNavigator();
 export default function MainTabs() {
   return (
     <Tab.Navigator
+     
       screenOptions={({ route }) => ({
         headerShown: false,
         tabBarShowLabel: true,
+        tabBarStyle: {
+          paddingTop: 10,
+          // The height of the tab bar including the extra space at the bottom
+          height: Platform.OS === 'ios' ? 80 : 70, 
+        },
         tabBarIcon: ({ focused, color, size }) => {
           let icon = faHome; // Default icon
 
@@ -64,10 +70,14 @@ export default function MainTabs() {
         tabBarLabel: route.name,
         tabBarActiveTintColor: 'black',
         tabBarInactiveTintColor: 'gray',
-       tabBarStyle: {
-        paddingTop: 10
-       },
+       
       })}
+      safeAreaInsets={{
+        bottom: 0,
+        left: 0,
+        right: 0,
+        top: 0
+      }}
     >
       <Tab.Screen name="Home" component={HomeScreen} />
       <Tab.Screen name="History" component={HistoryScreen} />

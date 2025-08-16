@@ -1,9 +1,12 @@
 // Server configuration
-export const SERVER_URL = 'http://3.110.224.104:3000'; // Change to your local/production IP
+export const SERVER_URL = 'https://shipmypack.com'; // Change to your local/production IP
 
+// https://shipmypack.com/api-docs/#/User/post_user_login
 // Socket endpoints (if needed separately)
-export const SOCKET_URL = SERVER_URL;
 
+export const SOCKET_URL = SERVER_URL;
+const PORT = 3000; // Change to your socket server port if different
+export const SOCKET_WS_URL = 'ws://shipmypack.com'+':'+PORT; // Change to your socket server port if different
 // API Endpoints
 export const ENDPOINTS = {
   LOGIN: `${SERVER_URL}/SMP/user/login`,

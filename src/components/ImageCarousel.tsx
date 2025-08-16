@@ -17,8 +17,8 @@ import Text from './Text';
 
 const { width: screenWidth } = Dimensions.get('window');
 
+// Set the item width to 80% of the screen, creating a 10% margin on each side.
 const ITEM_WIDTH = screenWidth * 0.9;
-const ITEM_HORIZONTAL_PADDING = (screenWidth - ITEM_WIDTH) / 2;
 const SNAP_INTERVAL = ITEM_WIDTH;
 
 export interface CarouselItem {
@@ -165,11 +165,10 @@ export default function InfiniteCarousel({ imagesData }: InfiniteCarouselProps) 
         horizontal
         keyExtractor={(item, index) => `${item.id}-${index}`}
         showsHorizontalScrollIndicator={false}
-        pagingEnabled={false}
+        pagingEnabled // ✅ This ensures perfect snapping
         snapToInterval={SNAP_INTERVAL}
         snapToAlignment="center"
         decelerationRate="fast"
-        contentContainerStyle={styles.flatListContentMulti}
         onScroll={Animated.event(
           [{ nativeEvent: { contentOffset: { x: scrollX } } }],
           { useNativeDriver: false }
@@ -234,10 +233,12 @@ export default function InfiniteCarousel({ imagesData }: InfiniteCarouselProps) 
 const styles = StyleSheet.create({
   carouselWrapper: {
     height: 220,
-    width: screenWidth,
-    alignSelf: 'center',
+    width: ITEM_WIDTH , // Match the wrapper width to the item width
+    alignSelf: 'center', // Center the carousel block on the screen
     justifyContent: 'center',
     overflow: 'hidden',
+    // Add margin to the wrapper itself to create the space on the sides
+    marginHorizontal: screenWidth * 0.1,
   },
   carouselWrapperEmpty: {
     height: 220,
@@ -245,7 +246,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#f0f0f0',
-    borderRadius: 16,
+    borderRadius: 0,
     marginVertical: 10,
     alignSelf: 'center',
   },
@@ -254,11 +255,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   flatListContentMulti: {
-    paddingHorizontal: ITEM_HORIZONTAL_PADDING,
+    // This style is now not needed, as the margin is on the parent wrapper
   },
   itemWrapper: {
     width: ITEM_WIDTH,
-    borderRadius: 16,
+    borderRadius: 0,
     overflow: 'hidden',
   },
   imageContainer: {
@@ -271,7 +272,6 @@ const styles = StyleSheet.create({
   imageContainerSingle: {
     height: 220,
     width: ITEM_WIDTH,
-    marginHorizontal: ITEM_HORIZONTAL_PADDING,
     borderRadius: 16,
     backgroundColor: '#f0f0f0',
     overflow: 'hidden',
@@ -300,7 +300,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   modalImage: {
-    width: '90%',
+    width: '100%',
     height: '80%',
   },
   closeButton: {
