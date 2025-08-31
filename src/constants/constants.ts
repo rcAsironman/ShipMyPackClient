@@ -15,6 +15,7 @@ export const ENDPOINTS = {
   RESET_PASSWORD: `${SERVER_URL}/api/auth/reset-password`,
   VERIFY_OTP: `${SERVER_URL}/api/auth/verify-otp`,
   CAROUSEL: `${SERVER_URL}/SMP/carousel/getAll`,
+  CATEGOERYS: `${SERVER_URL}/SMP/category/getAll`,
   ORDERS: `${SERVER_URL}/api/orders`,
   NOTIFICATIONS: `${SERVER_URL}/api/notifications`,
   SUPPORT_MESSAGES: `${SERVER_URL}/api/support/messages`,

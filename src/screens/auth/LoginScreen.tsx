@@ -245,7 +245,7 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
       }
      try{
       const response = await axios.post(ENDPOINTS.LOGIN, {
-        "mbl_num": mobile?.toString(),
+        "mbl_num": mobile?.toString() ,
         "password": password?.toString()
       });
       console.log("Login response:", response);
@@ -256,7 +256,7 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
         const user = response?.data?.user;
       const authToken = response.data?.token; // Adjust based on your API response structure
 
-        console.log("user obj ",user)
+        console.log("user obj ",response)
         await login({
           id: user.id.toString(),
           authToken: authToken, 

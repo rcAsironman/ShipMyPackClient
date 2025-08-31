@@ -37,6 +37,7 @@ import { Modalize } from 'react-native-modalize';
 import { launchImageLibrary, launchCamera, Asset } from 'react-native-image-picker'; // Keep launchCamera as it might be useful in the future, even if not directly used now for profile pic
 import { useAuthStore } from '../store/authStore';
 import Text from '../components/Text';
+import SwitchToggle from "react-native-switch-toggle";
 
 // Get screen dimensions for responsive layout and full-screen modal
 const { height: screenHeight, width: screenWidth } = Dimensions.get('window');
@@ -101,11 +102,11 @@ const ProfileScreen = ({ navigation }: { navigation: any }) => {
   const logout = useAuthStore((state) => state.logout);
 
 
-  
 
-  useEffect(()=>{
+
+  useEffect(() => {
     console.log("user in profile screen", user);
-  },[])
+  }, [])
   const openDetailModal = (key: string, title: string) => {
     setModalContentKey(key);
     setModalTitle(title);
@@ -525,10 +526,17 @@ const ProfileScreen = ({ navigation }: { navigation: any }) => {
             </View>
             <View className="mb-4">
               <Text className="text-lg font-medium text-[#212121] mb-2">Push Notifications:</Text>
-              <TouchableOpacity className="bg-gray-100 border border-gray-300 rounded-lg py-3 px-4 flex-row justify-between items-center">
+              <View className="bg-gray-100 border border-gray-300 rounded-lg py-3 px-4 flex-row justify-between items-center">
                 <Text className="text-base text-gray-800">Promotions</Text>
-                <Text className="text-blue-500">On/Off Switch (Placeholder)</Text>
-              </TouchableOpacity>
+                <SwitchToggle
+                  switchOn={true}
+                  onPress={() => {}}
+                  circleColorOff='#C4C4C4'
+                  circleColorOn='#00D9D5'
+                  backgroundColorOn='#6D6D6D'
+                  backgroundColorOff='#C4C4C4'
+                />
+              </View>
             </View>
             <TouchableOpacity className="bg-blue-600 rounded-lg py-4 items-center mt-4 shadow-sm" onPress={() => Alert.alert("Save", "Notification settings saved!")}>
               <Text className="text-white text-lg font-semibold">Save Preferences</Text>
@@ -553,27 +561,27 @@ const ProfileScreen = ({ navigation }: { navigation: any }) => {
         <StatusBar backgroundColor="white" barStyle="dark-content" />
         {/* FIXED HEADER - Styled to match HomeScreen header */}
         <View
-        style={{
-          flexDirection: 'row',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          paddingTop: Platform.OS === 'android' ? (StatusBar?.currentHeight || 0) : screenHeight * 0.02,
-          paddingBottom: 20,
-          paddingHorizontal: 16,
-          backgroundColor: 'white',
-          elevation: 5,
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 5 },
-          shadowOpacity: 0.1,
-          shadowRadius: 3,
-          zIndex: 10,
-        }}
-        className="shadow-md"
-      >
-         <Text style={{ fontSize: 20, fontWeight: '700', color: 'black', flex: 1, textAlign: 'center' }}>
-          Profile
-        </Text>
-      </View>
+          style={{
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            paddingTop: Platform.OS === 'android' ? (StatusBar?.currentHeight || 0) : screenHeight * 0.02,
+            paddingBottom: 20,
+            paddingHorizontal: 16,
+            backgroundColor: 'white',
+            elevation: 5,
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 5 },
+            shadowOpacity: 0.1,
+            shadowRadius: 3,
+            zIndex: 10,
+          }}
+          className="shadow-md"
+        >
+          <Text style={{ fontSize: 20, fontWeight: '700', color: 'black', flex: 1, textAlign: 'center' }}>
+            Profile
+          </Text>
+        </View>
 
         <ScrollView
           showsVerticalScrollIndicator={false}
@@ -650,8 +658,8 @@ const ProfileScreen = ({ navigation }: { navigation: any }) => {
                 <Text className="text-base text-[#212121] ml-4 flex-1">Notification preferences</Text>
               </View>
             </TouchableOpacity>
-            <TouchableOpacity className="flex-row items-center justify-between bg-white rounded-xl py-3.5 px-4 mb-2 shadow-sm" 
-            onPress={handleLogout}>
+            <TouchableOpacity className="flex-row items-center justify-between bg-white rounded-xl py-3.5 px-4 mb-2 shadow-sm"
+              onPress={handleLogout}>
               <View className="flex-row items-center">
                 <FontAwesomeIcon icon={faSignOutAlt} size={20} color={NW_COLORS.danger} />
                 <Text className="text-base text-red-600 ml-4 flex-1" style={{ color: NW_COLORS.danger }}>Log out</Text>
@@ -689,7 +697,7 @@ const ProfileScreen = ({ navigation }: { navigation: any }) => {
 
             {/* Image */}
             <Image
-              source={ currentProfilePictureUri }
+              source={currentProfilePictureUri}
               className="w-full h-[70%] max-h-[70%]"
               resizeMode="contain"
             />
