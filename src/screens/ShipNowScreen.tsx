@@ -55,6 +55,8 @@ import { cities } from '../data/cities';
 import DatePicker from 'react-native-date-picker';
 import { ENDPOINTS } from '../constants/constants';
 import Toast from 'react-native-toast-message';
+import { useAuthStore } from '../store/authStore';
+
 const { height: screenHeight } = Dimensions.get('window');
 
 interface VideoObject {
@@ -457,7 +459,8 @@ export default function ShipNowScreen({ navigation }: { navigation: any }) {
   const [receiverLocation, setReceiverLocation] = useState<string | null>(null);
   const [receiverAddress, setReceiverAddress] = useState<string>('');
   const [shippingVideo, setShippingVideo] = useState<VideoObject | null>(null);
-
+  const [mediaUrl, setMediaUrl] = useState<string | null>(null); // URL returned from backend after upload
+  const user = useAuthStore((state) => state.user);
   // Modal visibility states - these control the 'visible' prop of the React Native Modal component
   const [showShippingDatePicker, setShowShippingDatePicker] = useState<boolean>(false);
   const [showDeliveryDatePicker, setShowDeliveryDatePicker] = useState<boolean>(false);
