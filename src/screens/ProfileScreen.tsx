@@ -19,10 +19,10 @@ const ProfileScreen = () => {
   const [paymentmodalVisible, setPaymentModalVisible] = useState<boolean>(false);
   const [cuponModalVisible, setCuponModalvisible] = useState<boolean>(false);
   const [paymentDetails, setPaymentDetails] = useState<paymentInfoType>({
-    upiId: "9347606437@yxl",
-    bankName: null,
-    bankaccountNumber: null,
-    ifscCode: null
+    upiId: 'karthik@upi',
+    bankName: "Bank Of India",
+    bankaccountNumber: "00000101001010010",
+    ifscCode: "BKID0000001"
   });
 
 
