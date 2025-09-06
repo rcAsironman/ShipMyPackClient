@@ -2313,6 +2313,8 @@ PODS:
   - RecaptchaInterop (101.0.0)
   - RNCAsyncStorage (2.2.0):
     - React-Core
+  - RNCClipboard (1.16.3):
+    - React-Core
   - RNCPicker (2.11.1):
     - React-Core
   - RNDateTimePicker (8.4.2):
@@ -2668,6 +2670,7 @@ DEPENDENCIES:
   - ReactCommon/turbomodule/core (from `../node_modules/react-native/ReactCommon`)
   - ReactNativeFileAccess (from `../node_modules/react-native-file-access`)
   - "RNCAsyncStorage (from `../node_modules/@react-native-async-storage/async-storage`)"
+  - "RNCClipboard (from `../node_modules/@react-native-clipboard/clipboard`)"
   - "RNCPicker (from `../node_modules/@react-native-picker/picker`)"
   - "RNDateTimePicker (from `../node_modules/@react-native-community/datetimepicker`)"
   - RNFastImage (from `../node_modules/react-native-fast-image`)
@@ -2868,6 +2871,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-file-access"
   RNCAsyncStorage:
     :path: "../node_modules/@react-native-async-storage/async-storage"
+  RNCClipboard:
+    :path: "../node_modules/@react-native-clipboard/clipboard"
   RNCPicker:
     :path: "../node_modules/@react-native-picker/picker"
   RNDateTimePicker:
@@ -2990,6 +2995,7 @@ SPEC CHECKSUMS:
   ReactNativeFileAccess: 921d1223be7b739158410e6bc7199b4a9463a261
   RecaptchaInterop: 11e0b637842dfb48308d242afc3f448062325aba
   RNCAsyncStorage: b44e8a4e798c3e1f56bffccd0f591f674fb9198f
+  RNCClipboard: f6679d470d0da2bce2a37b0af7b9e0bf369ecda5
   RNCPicker: da0f1c9411208c1ca52bc98383db54a06e0a3862
   RNDateTimePicker: 392bdc0d6863b5de2fe9b957c82c25b6a038db29
   RNFastImage: 462a183c4b0b6b26fdfd639e1ed6ba37536c3b87

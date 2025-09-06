@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { View, Platform, Dimensions } from 'react-native';
 
@@ -7,7 +7,7 @@ import HistoryScreen from '../screens/HistoryScreen';
 import AddTripScreen from '../screens/AddTripScreen';
 import EarningsScreen from '../screens/EarningsScreen';
 import ProfileScreen from '../screens/ProfileScreen';
-
+import { useBankInfoStore } from '../store/bankInfo';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import {
   faHome,
@@ -25,6 +25,13 @@ const { width: screenWidth } = Dimensions.get('window');
 const Tab = createBottomTabNavigator();
 
 export default function MainTabs() {
+
+
+  const restoreBankDetails = useBankInfoStore((state) => state.restoreBankDetails);
+
+  useEffect(() => {
+    restoreBankDetails();
+  },[])
   return (
     <Tab.Navigator
      

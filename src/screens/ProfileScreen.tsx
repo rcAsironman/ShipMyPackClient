@@ -1,5 +1,5 @@
-import { Modal, View, Text, Platform, StatusBar, Dimensions, TouchableOpacity, Image, ScrollView } from 'react-native'
-import React, { useState } from 'react'
+import { Modal, View, Text, Platform, StatusBar, Dimensions, TouchableOpacity, Image, ScrollView, Alert } from 'react-native'
+import React, { useEffect, useState } from 'react'
 import { launchImageLibrary } from 'react-native-image-picker';
 import Toast from 'react-native-toast-message';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
@@ -7,7 +7,8 @@ import { faClose, faMoneyBill, faTicket } from '@fortawesome/free-solid-svg-icon
 import ViewProfileImageModal from '../components/ViewProfileImageModal';
 import { paymentInfoType, paymentDetails } from '../types/types';
 import PaymentMethodModal from '../components/PaymentMethodModal';
-
+import { useBankInfoStore } from '../store/bankInfo';
+import CuponsModal from '../components/CuponsModal';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
@@ -18,15 +19,19 @@ const ProfileScreen = () => {
   const [profileImg, setprofileImg] = useState<string | null>("https://avatar.iran.liara.run/public/8");
   const [paymentmodalVisible, setPaymentModalVisible] = useState<boolean>(false);
   const [cuponModalVisible, setCuponModalvisible] = useState<boolean>(false);
-  const [paymentDetails, setPaymentDetails] = useState<paymentInfoType>({
-    upiId: 'karthik@upi',
-    bankName: "Bank Of India",
-    bankaccountNumber: "00000101001010010",
-    ifscCode: "BKID0000001"
+  const bankDataFromstore = useBankInfoStore((state) => state.bankDetails)
+  const [paymentDetails, setPaymentDetails] = useState<paymentInfoType>(bankDataFromstore ? bankDataFromstore : {
+    upiId: null,
+    bankName: null,
+    bankaccountNumber: null,
+    ifscCode: null
   });
 
 
 
+  useEffect(() => {
+    
+  },[])
 
 
   {/*close profile View modal*/}
@@ -39,7 +44,7 @@ const ProfileScreen = () => {
   }
 
   const showCupons = () => {
-
+    setCuponModalvisible(true);
   }
 
 
@@ -189,6 +194,11 @@ const ProfileScreen = () => {
       setPaymentModalVisible={setPaymentModalVisible}
       paymentDetails={paymentDetails}
       setPaymentDetails={setPaymentDetails}
+      />
+
+      <CuponsModal
+      isVisible={cuponModalVisible}
+      setCuponModalvisible={setCuponModalvisible}
       />
     </View>
   )

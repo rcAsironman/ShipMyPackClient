@@ -1,14 +1,14 @@
-import { View, Text, TextInput, TouchableOpacity, Alert, KeyboardAvoidingView, Platform } from 'react-native'
-import React, { useEffect, useState } from 'react'
-import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome'
-import { paymentInfoType } from '../types/types'
-
+import { View, TextInput, TouchableOpacity, Alert, KeyboardAvoidingView, Platform } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
+import { paymentInfoType } from '../types/types';
+import Text from './Text';
 import Modal from 'react-native-modal';
 import Toast from 'react-native-toast-message';
 import { faBank, faEdit, faForward, faPen, faTrash, faTrashCan } from '@fortawesome/free-solid-svg-icons';
 import { ScrollView } from 'react-native-gesture-handler';
 import CustomToast from './CustomToast';
-
+import { useBankInfoStore } from '../store/bankInfo';
 
 
 interface paymentprops {
@@ -21,8 +21,9 @@ interface paymentprops {
 const PaymentMethodModal = ({ paymentModalVisible, setPaymentModalVisible, paymentDetails, setPaymentDetails }: paymentprops) => {
 
 
-    const [isUpiIdEmpty, setIsUpiIdEmpty] = useState<boolean>(paymentDetails.upiId || paymentDetails.upiId !== null ? false : true);
-    const [isBankDataEmpty, setIsBankDataEmpty] = useState<boolean>(paymentDetails.bankaccountNumber || paymentDetails.bankaccountNumber !== null ? false : true);
+    const [isUpiIdEmpty, setIsUpiIdEmpty] = useState<boolean>((paymentDetails.upiId != null) ? false : true);
+    const [isBankDataEmpty, setIsBankDataEmpty] = useState<boolean>(paymentDetails.bankaccountNumber != '' || paymentDetails.bankaccountNumber !== null ? false : true);
+    const setBankDetailsToStore = useBankInfoStore((state) => state.setBankDetails);
 
     useEffect(() => {
         if (paymentDetails.upiId === null) {
@@ -31,6 +32,7 @@ const PaymentMethodModal = ({ paymentModalVisible, setPaymentModalVisible, payme
         if (paymentDetails.bankaccountNumber === null) {
             setIsBankDataEmpty(true);
         }
+
     }, [paymentDetails])
 
     const handleSave = () => {
@@ -40,12 +42,34 @@ const PaymentMethodModal = ({ paymentModalVisible, setPaymentModalVisible, payme
         if (paymentDetails.bankaccountNumber !== null || paymentDetails.bankName !== null || paymentDetails.ifscCode !== null) {
             setIsBankDataEmpty(false);
         }
+
+        setBankDetailsToStore(paymentDetails);
         Toast.show({
             type: 'success',
             text1: 'Payment details saved successfully',
             position: 'bottom',
             visibilityTime: 2000,
         });
+    }
+
+
+    const handleDelete = (bankOrUpi: number) => {
+
+        let updateData = {...paymentDetails};
+
+        if(bankOrUpi === 1){
+            //upi
+            setIsUpiIdEmpty(true);
+            updateData.upiId = null;
+        }
+        else if (bankOrUpi === 2){
+            //bank
+            setIsBankDataEmpty(true);
+            updateData.bankaccountNumber = null;
+            updateData.bankName = null;
+            updateData.ifscCode = null;
+        }
+        setBankDetailsToStore(updateData);
     }
 
     return (
@@ -61,7 +85,7 @@ const PaymentMethodModal = ({ paymentModalVisible, setPaymentModalVisible, payme
         >
 
 
-            <View className='h-[750px] bg-gray-100  w-full rounded px-4'>
+            <View className=' bg-gray-100  w-full rounded px-4' style={{height: '80%'}}>
                 {/*drag pointer*/}
                 <View className='h-2 w-8 bg-gray-500 self-center mt-2 rounded'></View>
 
@@ -80,7 +104,7 @@ const PaymentMethodModal = ({ paymentModalVisible, setPaymentModalVisible, payme
                         <Text className='text-xl font-semibold mt-6 mb-8'>Update Your Payemt Details Here</Text>
                         {
                             !isUpiIdEmpty ? (
-                                <View className='border-[1px] p-4 bg-blue-100 rounded-[10px]'>
+                                <View className='border-[1px] p-4 bg-white-100 rounded-[10px]'>
                                     <View className='flex-row items-center gap-2'>
                                         <View className='bg-blue-200 h-10 w-10 justify-center items-center rounded-full'>
                                             <FontAwesomeIcon icon={faForward} size={20} color='black' />
@@ -97,6 +121,7 @@ const PaymentMethodModal = ({ paymentModalVisible, setPaymentModalVisible, payme
                                             <TouchableOpacity className='bg-gray-200 h-10 w-10 justify-center items-center rounded-full -mr-8'
                                                 onPress={() => {
                                                     setPaymentDetails({ ...paymentDetails, upiId: null });
+                                                    handleDelete(1);
                                                     Toast.show({
                                                         type: 'error',
                                                         text1: 'UPI Id Deleted Successfully',
@@ -149,9 +174,11 @@ const PaymentMethodModal = ({ paymentModalVisible, setPaymentModalVisible, payme
                         {/*Bank details*/}
                         {
                             !isBankDataEmpty ? (
-                                <View className='border-[1px] p-4 bg-blue-100 rounded-[10px] mt-10'>
+                                <View className='border-[1px] p-4 bg-white-100 rounded-[10px] mt-10'
+                                
+                                >
                                     <View className='flex-row items-center gap-2'>
-                                        <View className='bg-blue-200 h-10 w-10 justify-center items-center rounded-full'>
+                                        <View className='bg-green-200 h-10 w-10 justify-center items-center rounded-full'>
                                             <FontAwesomeIcon icon={faBank} size={20} color='black' />
                                         </View>
                                         <Text className='text-lg font-semibold'>Bank</Text>
@@ -170,6 +197,7 @@ const PaymentMethodModal = ({ paymentModalVisible, setPaymentModalVisible, payme
                                             <TouchableOpacity className='bg-gray-200 h-10 w-10 justify-center items-center rounded-full -mr-8'
                                                 onPress={() => {
                                                     setPaymentDetails({ ...paymentDetails, bankaccountNumber: null, bankName: null, ifscCode: null });
+                                                    handleDelete(2);
                                                     Toast.show({
                                                         type: 'error',
                                                         text1: 'Bank Details Deleted Successfully',

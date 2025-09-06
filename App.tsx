@@ -59,11 +59,7 @@ export default function App() {
 
   }
   useEffect(() => {
-    auth.restoreLogin();
     handleAdvertisementInitialFetch()
-
-
-
   }, [])
 
   return (
