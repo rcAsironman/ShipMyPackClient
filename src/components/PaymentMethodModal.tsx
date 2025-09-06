@@ -85,7 +85,7 @@ const PaymentMethodModal = ({ paymentModalVisible, setPaymentModalVisible, payme
         >
 
 
-            <View className=' bg-gray-100  w-full rounded px-4' style={{height: '80%'}}>
+            <View className=' bg-gray-100  w-full rounded px-4' style={{height: '70%'}}>
                 {/*drag pointer*/}
                 <View className='h-2 w-8 bg-gray-500 self-center mt-2 rounded'></View>
 

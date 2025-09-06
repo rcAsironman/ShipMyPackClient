@@ -1,20 +1,22 @@
-import { Modal, View, Text, Platform, StatusBar, Dimensions, TouchableOpacity, Image, ScrollView, Alert } from 'react-native'
+import { Modal, View, Text, Platform, StatusBar, Dimensions, TouchableOpacity, ScrollView, Alert } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import { launchImageLibrary } from 'react-native-image-picker';
 import Toast from 'react-native-toast-message';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import { faClose, faMoneyBill, faTicket } from '@fortawesome/free-solid-svg-icons';
+import { faClose, faInfo, faLock, faMoneyBill, faRightFromBracket, faShare, faTicket } from '@fortawesome/free-solid-svg-icons';
 import ViewProfileImageModal from '../components/ViewProfileImageModal';
 import { paymentInfoType, paymentDetails } from '../types/types';
 import PaymentMethodModal from '../components/PaymentMethodModal';
 import { useBankInfoStore } from '../store/bankInfo';
 import CuponsModal from '../components/CuponsModal';
+import { useAuthStore } from '../store/authStore';
+import FastImage from 'react-native-fast-image';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
 
 
-const ProfileScreen = () => {
+const ProfileScreen = ({ navigation }: { navigation: any }) => {
   const [viewProfileImg, setViewProfileImg] = useState<boolean>(false);
   const [profileImg, setprofileImg] = useState<string | null>("https://avatar.iran.liara.run/public/8");
   const [paymentmodalVisible, setPaymentModalVisible] = useState<boolean>(false);
@@ -27,14 +29,16 @@ const ProfileScreen = () => {
     ifscCode: null
   });
 
+  const logoutUser = useAuthStore((state) => state.logout);
+  const removeBankDetails = useBankInfoStore((state) => state.clearBankDetails);
 
 
   useEffect(() => {
-    
-  },[])
+
+  }, [])
 
 
-  {/*close profile View modal*/}
+  {/*close profile View modal*/ }
   const closeProfileViewModal = () => {
     setViewProfileImg(false);
   }
@@ -47,13 +51,46 @@ const ProfileScreen = () => {
     setCuponModalvisible(true);
   }
 
+  const handleAboutUs = () => {
+    navigation.navigate('AboutUs');
+  }
 
+  const logout = async () => {
+
+    try {
+      await logoutUser();
+      await removeBankDetails();
+      Toast.show({
+        type: 'success',
+        text1: 'Logged out',
+        position: 'top',
+        visibilityTime: 2000
+      })
+    }
+    catch (err) {
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Failed to logout. Please try again.',
+        position: 'top',
+        visibilityTime: 3000
+      })
+    }
+
+  }
   //payment icons and methods
 
   const paymentInfo: paymentDetails[] = [
     { id: 1, icon: faMoneyBill, label: 'Payment Info', method: updatePaymentMethod },
     { id: 2, icon: faTicket, label: 'Cupons', method: showCupons },
   ]
+
+  const otherInformation = [
+    { id: 2, icon: faInfo, label: 'About us', method: handleAboutUs },
+    { id: 3, icon: faLock, label: 'Account privacy', method: () => { } },
+    { id: 1, icon: faShare, label: 'Share the app', method: () => { } },
+    { id: 4, icon: faRightFromBracket, label: 'Logout', method: logout }
+  ];
 
   const updateProfileImage = () => {
 
@@ -100,19 +137,24 @@ const ProfileScreen = () => {
   }
 
   return (
-    <View  className='bg-gray-100' style={{ flex: 1,}}>
+    <View className='bg-white' style={{ flex: 1, }}>
       {/*Header*/}
       <View
         className='
       w-full
       bg-white
-      h-[100px]
+      h-[13.5%]
       flex-row
       items-center
       justify-center
       '
         style={{
-          paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : screenHeight * 0.06
+          paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : screenHeight * 0.06,
+          elevation: 4,
+          shadowColor: '#000',
+          shadowOpacity: 0.2,
+          shadowOffset: { width: 0, height: 2 }
+
         }}
       >
         <Text className='text-2xl font-bold'>Profile</Text>
@@ -143,14 +185,20 @@ const ProfileScreen = () => {
           '
               onPress={() => setViewProfileImg(true)}
             >
-              <Image
-                source={{ uri: profileImg! }}
+              <FastImage
+                source={{
+                  uri: profileImg!,
+                  priority: FastImage.priority.high,
+                  cache: FastImage.cacheControl.immutable, // ensures aggressive caching
+                }}
                 style={{
                   height: '100%',
                   width: '100%',
-                  borderRadius: 100
+                  borderRadius: 100,
                 }}
+                resizeMode={FastImage.resizeMode.cover}
               />
+
             </TouchableOpacity>
           </View>
           <View
@@ -165,11 +213,24 @@ const ProfileScreen = () => {
 
         {/*Payment*/}
         <View className='mt-10 ml-8'>
-          <Text className='text-xl '>PAYMENT AND COUPONS</Text>
+          <Text className='text-xl text-gray-400'>PAYMENT AND COUPONS</Text>
           {
             paymentInfo.map((item) => (
               <TouchableOpacity className='mt-2 flex-row items-center py-2' key={item?.id}
-              onPress={item?.method}
+                onPress={item?.method}
+              >
+                <View className='h-10 w-10 bg-gray-200 rounded-full justify-center items-center'>
+                  <FontAwesomeIcon icon={item?.icon} />
+                </View>
+                <Text className='ml-4 font-semibold'>{item?.label}</Text>
+              </TouchableOpacity>
+            ))
+          }
+          <Text className='text-xl text-gray-400 mt-4'>OTHER INFORMATION</Text>
+          {
+            otherInformation.map((item) => (
+              <TouchableOpacity className='mt-2 flex-row items-center py-2' key={item?.id}
+                onPress={item?.method}
               >
                 <View className='h-10 w-10 bg-gray-200 rounded-full justify-center items-center'>
                   <FontAwesomeIcon icon={item?.icon} />
@@ -179,26 +240,30 @@ const ProfileScreen = () => {
             ))
           }
         </View>
+        <View className='mt-8'>
+          <Text className='text-xl font-bold text-gray-300 self-center mt-0'>SHIPMYPACK</Text>
+          <Text className='text-lg text-gray-300 self-center mt-0'>v1.0.0.</Text>
+        </View>
       </ScrollView>
 
-      <ViewProfileImageModal 
-      viewProfileImg={viewProfileImg} 
-      closeingIcon={faClose}
-      profileImg={profileImg}
-      updateProfileImage={updateProfileImage}
-      closeProfileViewModal={closeProfileViewModal}
+      <ViewProfileImageModal
+        viewProfileImg={viewProfileImg}
+        closeingIcon={faClose}
+        profileImg={profileImg}
+        updateProfileImage={updateProfileImage}
+        closeProfileViewModal={closeProfileViewModal}
       />
 
       <PaymentMethodModal
-      paymentModalVisible={paymentmodalVisible}
-      setPaymentModalVisible={setPaymentModalVisible}
-      paymentDetails={paymentDetails}
-      setPaymentDetails={setPaymentDetails}
+        paymentModalVisible={paymentmodalVisible}
+        setPaymentModalVisible={setPaymentModalVisible}
+        paymentDetails={paymentDetails}
+        setPaymentDetails={setPaymentDetails}
       />
 
       <CuponsModal
-      isVisible={cuponModalVisible}
-      setCuponModalvisible={setCuponModalvisible}
+        isVisible={cuponModalVisible}
+        setCuponModalvisible={setCuponModalvisible}
       />
     </View>
   )

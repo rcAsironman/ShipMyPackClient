@@ -1,6 +1,7 @@
-import { View, Text, Modal, Image, TouchableOpacity} from 'react-native'
+import { View, Text, Modal, TouchableOpacity} from 'react-native'
 import React from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome'
+import FastImage from 'react-native-fast-image'
 
 interface profileModalProps{
     viewProfileImg: boolean,
@@ -51,8 +52,12 @@ const ViewProfileImageModal = ({viewProfileImg, closeingIcon, profileImg, update
 
        '
       >
-        <Image
-          source={{ uri: profileImg! }}
+        <FastImage
+          source={{ 
+            uri: profileImg!,
+            priority: FastImage.priority.high,
+            cache: FastImage.cacheControl.immutable
+          }}
           style={{
             height: '100%',
             width: '100%',
