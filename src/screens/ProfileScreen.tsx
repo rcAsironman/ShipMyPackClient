@@ -55,6 +55,10 @@ const ProfileScreen = ({ navigation }: { navigation: any }) => {
     navigation.navigate('AboutUs');
   }
 
+  const handlePrivacyPolicy = () => {
+    navigation.navigate('PrivacyPolicy');
+  }
+
   const logout = async () => {
 
     try {
@@ -87,7 +91,7 @@ const ProfileScreen = ({ navigation }: { navigation: any }) => {
 
   const otherInformation = [
     { id: 2, icon: faInfo, label: 'About us', method: handleAboutUs },
-    { id: 3, icon: faLock, label: 'Account privacy', method: () => { } },
+    { id: 3, icon: faLock, label: 'Account privacy', method: handlePrivacyPolicy },
     { id: 1, icon: faShare, label: 'Share the app', method: () => { } },
     { id: 4, icon: faRightFromBracket, label: 'Logout', method: logout }
   ];
