@@ -15,6 +15,7 @@ import {
 import Modal from "react-native-modal";
 import Toast from "react-native-toast-message";
 import CustomToast from "./CustomToast";
+import Clipboard from '@react-native-clipboard/clipboard';
 
 type Props = {
     isVisible: boolean;
@@ -25,13 +26,14 @@ const ITEM_ESTIMATED_HEIGHT = 120; // tweak if your card is taller/shorter
 
 const CuponCard = ({ code, description, expiry }: { code: string; description: string; expiry: string }) => {
     
-    const handleCopyCode = () => {
+    const handleCopyCode = (code: string) => {
         Toast.show({
             type: 'success',
             text1: 'Coupon Code Copied!',
             position: 'top',
             visibilityTime: 2000,
         })
+        Clipboard.setString(code);
     }    
     return (
  <View style={styles.card}>
@@ -40,7 +42,7 @@ const CuponCard = ({ code, description, expiry }: { code: string; description: s
                 <Text style={styles.codeText}>{code}</Text>
             </View>
             <TouchableOpacity
-            onPress={handleCopyCode}
+            onPress={() => handleCopyCode(code)}
             >
                 <FontAwesomeIcon icon={faCopy} size={20} color={'#e0dddd'} />
             </TouchableOpacity>

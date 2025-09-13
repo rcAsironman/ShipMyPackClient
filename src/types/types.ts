@@ -12,3 +12,13 @@ export interface paymentDetails {
     label: string,
     method: () => void
   }
+
+  export interface transactionType {
+    orderId: string,
+    type: 'credit' | 'debit',
+    amount: number,
+    date: string,
+    shipmentType: 'shipper' | 'sender',
+    status: 'completed' | 'pending' | 'failed',
+    description: string,
+  }
