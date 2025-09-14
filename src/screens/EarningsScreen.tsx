@@ -19,7 +19,7 @@ const EarningsScreen = () => {
         ? transactions.filter((txn) => txn.status === 'pending')
         : transactions.filter((txn) => txn.status === 'failed');
 
-
+  const currencySymbol = '₹'
   const handleTabPress = (tab: tabType, index: number) => {
     setSelectedTab(tab);
 
@@ -68,7 +68,7 @@ const EarningsScreen = () => {
             {/* Balance */}
             <Text className='text-lg font-semibold'>Balance</Text>
             <Text className='text-lg font-semibold' style={{ color: 'white' }}>
-              ₹1500/-
+              {currencySymbol}1500/-
             </Text>
           </View>
 
@@ -99,9 +99,9 @@ const EarningsScreen = () => {
   const Tabs = () => {
 
 
-    return <View className='bg-gray-200 h-16 w-full flex-row '>
+    return <View className='bg-gray-100 h-16 w-full flex-row '>
       <Animated.View
-      className='rounded-full' 
+        className='rounded-full'
         style={{
           transform: [{ translateX }],
           position: 'absolute',
@@ -114,24 +114,23 @@ const EarningsScreen = () => {
       />
 
       {
-        tabs.map((tab, index) => (<>
-          <TouchableOpacity 
-          key={tab} 
-          onPress={() => handleTabPress(tab as tabType, index)}
-          style={{
-            width: screenWidth / tabs.length,
-            justifyContent: 'center',
-            alignItems: 'center',
-          }}
-            >
-            <Text className='text-lg font-semibold'
+        tabs.map((tab, index) => (
+          <TouchableOpacity
+            key={tab}
+            onPress={() => handleTabPress(tab as tabType, index)}
             style={{
-              color: selectedTab === tab ? 'white' : 'black',
+              width: screenWidth / tabs.length,
+              justifyContent: 'center',
+              alignItems: 'center',
             }}
+          >
+            <Text className='text-lg font-semibold'
+              style={{
+                color: selectedTab === tab ? 'white' : 'black',
+              }}
             >{tab}</Text>
           </TouchableOpacity>
-
-        </>))
+          ))
       }
     </View>
   };
@@ -146,19 +145,29 @@ const EarningsScreen = () => {
   ];
 
   const renderItem = ({ item }: { item: typeof transactions[0] }) => (
-    <View className='p-4 border-b border-gray-200'>
-      <Text className='text-lg font-semibold'>{item.description}</Text>
-      <Text className='text-gray-600'>Amount: ${item.amount.toFixed(2)}</Text>
-      <Text className='text-gray-600'>Date: {item.date}</Text>
-      <Text
-        className={`text-sm font-medium ${item.status === 'completed'
-          ? 'text-green-600'
-          : item.status === 'pending'
-            ? 'text-yellow-600'
-            : 'text-red-600'
-          }`}>
-        Status: {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
-      </Text>
+    <View className='p-4 border-b border-gray-200' key={item.orderId}>
+      <View className='flex-row items-center justify-between'>
+        <Text className='text-lg font-semibold'>{item.orderId}</Text>
+        <Text className='text-gray-400'>Date: {item.date}</Text>
+      </View>
+
+      <View className='flex-row items-center justify-between mt-2'>
+        <Text className='text-gray-600 text-lg font-semibold'>{currencySymbol}{item.amount.toFixed(2)}</Text>
+        <View className={`${item.status === 'completed' ? 'bg-green-100' : item.status === 'pending' ? 'bg-yellow-100' : 'bg-red-100'}
+     h-8  justify-center rounded-full px-4
+     `}
+        >
+          <Text
+            className={`text-sm font-medium ${item.status === 'completed'
+              ? 'text-green-600'
+              : item.status === 'pending'
+                ? 'text-yellow-600'
+                : 'text-red-600'
+              }`}>
+            {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
+          </Text>
+        </View>
+      </View>
     </View>
   );
 
@@ -199,6 +208,9 @@ const EarningsScreen = () => {
             <WithdrawButton />
           </>
         )}
+        renderSectionFooter={() => <TouchableOpacity className='bg-airbnb-primary py-4 items-center w-[90%] rounded-full mb-4 self-center mt-4'>
+          <Text className='text-white text-xl'>Load More</Text>
+        </TouchableOpacity>} // Add some space at the bottom
       />
     </View>
   );
