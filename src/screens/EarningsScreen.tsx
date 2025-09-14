@@ -1,5 +1,5 @@
-import { View, Text, SectionList, TouchableOpacity } from 'react-native';
-import React, { useState } from 'react';
+import { View, Text, SectionList, TouchableOpacity, Dimensions, Animated } from 'react-native';
+import React, { useRef, useState } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { transactions } from '../data/transaction';
 import FastImage from 'react-native-fast-image';
@@ -9,15 +9,26 @@ type tabType = 'completed' | 'processing' | 'failed';
 const EarningsScreen = () => {
   const { top } = useSafeAreaInsets();
   const [selectedTab, setSelectedTab] = useState<tabType>('completed');
-
+  const tabs = ['completed', 'processing', 'failed'];
+  const translateX = useRef(new Animated.Value(0)).current;
+  const screenWidth = Dimensions.get('window').width;
   const filteredTransactions =
     selectedTab === 'completed'
       ? transactions.filter((txn) => txn.status === 'completed')
       : selectedTab === 'processing'
-      ? transactions.filter((txn) => txn.status === 'pending')
-      : transactions.filter((txn) => txn.status === 'failed');
+        ? transactions.filter((txn) => txn.status === 'pending')
+        : transactions.filter((txn) => txn.status === 'failed');
 
-      const filteredTransactionsPro = transactions.filter((txn) => txn.status === 'pending');
+
+  const handleTabPress = (tab: tabType, index: number) => {
+    setSelectedTab(tab);
+
+    Animated.spring(translateX, {
+      toValue: (screenWidth / tabs.length) * index,
+      useNativeDriver: true,
+    }).start();
+
+  }
 
   const Card = () => {
     return (
@@ -75,7 +86,7 @@ const EarningsScreen = () => {
 
   const WithdrawButton = () => {
     return (
-      <View className='mt-4'>
+      <View className='mt-4 mb-8'>
         <TouchableOpacity className='flex items-center justify-center rounded-lg bg-black py-4 w-[90%] self-center'>
           <Text className='text-xl font-semibold' style={{ color: 'white' }}>
             Withdraw
@@ -86,7 +97,43 @@ const EarningsScreen = () => {
   };
 
   const Tabs = () => {
-    return <View className='bg-green-500 h-12 w-full'></View>;
+
+
+    return <View className='bg-gray-200 h-16 w-full flex-row '>
+      <Animated.View
+      className='rounded-full' 
+        style={{
+          transform: [{ translateX }],
+          position: 'absolute',
+          backgroundColor: 'black',
+          height: '60%',
+          width: screenWidth / tabs.length - 20,
+          bottom: 10,
+          left: 10
+        }}
+      />
+
+      {
+        tabs.map((tab, index) => (<>
+          <TouchableOpacity 
+          key={tab} 
+          onPress={() => handleTabPress(tab as tabType, index)}
+          style={{
+            width: screenWidth / tabs.length,
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}
+            >
+            <Text className='text-lg font-semibold'
+            style={{
+              color: selectedTab === tab ? 'white' : 'black',
+            }}
+            >{tab}</Text>
+          </TouchableOpacity>
+
+        </>))
+      }
+    </View>
   };
 
   // Define the sections for SectionList
@@ -94,11 +141,6 @@ const EarningsScreen = () => {
     {
       title: 'completed', // This title can be anything, it's just a key for the section
       data: filteredTransactions,
-
-    },
-    {
-      title: 'processing', // This title can be anything, it's just a key for the section
-      data: filteredTransactionsPro,
 
     },
   ];
@@ -109,13 +151,12 @@ const EarningsScreen = () => {
       <Text className='text-gray-600'>Amount: ${item.amount.toFixed(2)}</Text>
       <Text className='text-gray-600'>Date: {item.date}</Text>
       <Text
-        className={`text-sm font-medium ${
-          item.status === 'completed'
-            ? 'text-green-600'
-            : item.status === 'pending'
+        className={`text-sm font-medium ${item.status === 'completed'
+          ? 'text-green-600'
+          : item.status === 'pending'
             ? 'text-yellow-600'
             : 'text-red-600'
-        }`}>
+          }`}>
         Status: {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
       </Text>
     </View>
