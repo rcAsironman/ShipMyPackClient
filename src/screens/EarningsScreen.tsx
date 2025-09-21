@@ -1,8 +1,14 @@
-import { View, Text, SectionList, TouchableOpacity, Dimensions, Animated } from 'react-native';
+import { View, Text, SectionList, TouchableOpacity, Dimensions, Animated, Alert } from 'react-native';
 import React, { useRef, useState } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { transactions } from '../data/transaction';
 import FastImage from 'react-native-fast-image';
+import { useBankInfoStore } from '../store/bankInfo';
+import Toast from 'react-native-toast-message';
+import WithdrawModal from '../components/WithdrawModal';
+import PayNegativeBalance from '../components/PayNegativeBalance';
+
+
 
 type tabType = 'completed' | 'processing' | 'failed';
 
@@ -12,6 +18,11 @@ const EarningsScreen = () => {
   const tabs = ['completed', 'processing', 'failed'];
   const translateX = useRef(new Animated.Value(0)).current;
   const screenWidth = Dimensions.get('window').width;
+  const bankDetails = useBankInfoStore((state) => state.bankDetails);
+  const [payemtFullScreenModal, setPaymentFullScreenModal] = useState<boolean>(false);
+  const [amountToWithdraw, setAmountToWithdraw] = useState<number>(0);
+  const [negativePayemtFullScreenModal, setNegativePaymentFullScreenModal] = useState<boolean>(false);
+  const [currentAccountBalance, setCurrentAccountBalance] = useState<number>(1500);
   const filteredTransactions =
     selectedTab === 'completed'
       ? transactions.filter((txn) => txn.status === 'completed')
@@ -20,6 +31,25 @@ const EarningsScreen = () => {
         : transactions.filter((txn) => txn.status === 'failed');
 
   const currencySymbol = '₹'
+
+  const handlePayNegativeBalance = () => {
+    setNegativePaymentFullScreenModal(true);
+  }
+
+  const handleWithdraw = () => {
+    if(bankDetails?.bankaccountNumber !== null || bankDetails.upiId !== null){
+       setPaymentFullScreenModal(true);
+    }
+    else{
+      Toast.show({
+        type: 'info',
+        text1: 'Add Payment Method',
+        text2: 'Please add a payment method in Profile to withdraw earnings.',
+        position: 'top',
+        visibilityTime: 4000,
+      })
+    }
+  }
   const handleTabPress = (tab: tabType, index: number) => {
     setSelectedTab(tab);
 
@@ -68,7 +98,7 @@ const EarningsScreen = () => {
             {/* Balance */}
             <Text className='text-lg font-semibold'>Balance</Text>
             <Text className='text-lg font-semibold' style={{ color: 'white' }}>
-              {currencySymbol}1500/-
+              {currencySymbol}{currentAccountBalance}/-
             </Text>
           </View>
 
@@ -87,9 +117,11 @@ const EarningsScreen = () => {
   const WithdrawButton = () => {
     return (
       <View className='mt-4 mb-8'>
-        <TouchableOpacity className='flex items-center justify-center rounded-lg bg-black py-4 w-[90%] self-center'>
+        <TouchableOpacity className='flex items-center justify-center rounded-lg bg-black py-4 w-[90%] self-center'
+        onPress={currentAccountBalance > 0 ? handleWithdraw : handlePayNegativeBalance}
+        >
           <Text className='text-xl font-semibold' style={{ color: 'white' }}>
-            Withdraw
+           {currentAccountBalance > 0 ? ' Withdraw' : 'Pay Now'}
           </Text>
         </TouchableOpacity>
       </View>
@@ -212,6 +244,20 @@ const EarningsScreen = () => {
           <Text className='text-white text-xl'>Load More</Text>
         </TouchableOpacity>} // Add some space at the bottom
       />
+
+   <WithdrawModal 
+      currentAccountBalance={currentAccountBalance} 
+      isModalVisible={payemtFullScreenModal} 
+      bankInfo={bankDetails} 
+      setWithdrawModal={setPaymentFullScreenModal}
+      />
+      <PayNegativeBalance
+      currentNegativeBalance={currentAccountBalance}
+      setCloseModal={setNegativePaymentFullScreenModal}
+      isModalVisible={negativePayemtFullScreenModal}
+      upiInfo={bankDetails?.upiId || null}
+      />
+      <Toast />
     </View>
   );
 };
