@@ -22,7 +22,7 @@ const EarningsScreen = () => {
   const [payemtFullScreenModal, setPaymentFullScreenModal] = useState<boolean>(false);
   const [amountToWithdraw, setAmountToWithdraw] = useState<number>(0);
   const [negativePayemtFullScreenModal, setNegativePaymentFullScreenModal] = useState<boolean>(false);
-  const [currentAccountBalance, setCurrentAccountBalance] = useState<number>(1500);
+  const [currentAccountBalance, setCurrentAccountBalance] = useState<number>(-1500);
   const filteredTransactions =
     selectedTab === 'completed'
       ? transactions.filter((txn) => txn.status === 'completed')

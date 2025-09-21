@@ -105,7 +105,8 @@ const CuponsModal: React.FC<Props> = ({ isVisible, setCuponModalvisible }) => {
             useNativeDriverForBackdrop={true}
         >
             <View style={styles.container} onLayout={onContainerLayout}>
-                <View style={styles.dragHandle} />
+                 {/*drag pointer*/}
+                 <View className='h-2 w-8 bg-gray-500 self-center mt-2 rounded'></View>
 
                 <FlatList
                     ref={flatListRef}

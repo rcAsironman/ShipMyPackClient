@@ -115,7 +115,9 @@ const PaymentMethodModal = ({ paymentModalVisible, setPaymentModalVisible, payme
                                     <View className='flex-row items-center justify-between'>
                                         <Text className='mt-2 text-lg font-semibold'>{paymentDetails.upiId}</Text>
                                         <View className='flex-row items-center justify-evenly w-1/3'>
-                                            <TouchableOpacity className='bg-gray-200 h-10 w-10 justify-center items-center rounded-full -ml-6'>
+                                            <TouchableOpacity className='bg-gray-200 h-10 w-10 justify-center items-center rounded-full -ml-6'
+                                            onPress={() => setIsUpiIdEmpty(true)}
+                                            >
                                                 <FontAwesomeIcon icon={faPen} size={15} color='black' />
                                             </TouchableOpacity>
                                             <TouchableOpacity className='bg-gray-200 h-10 w-10 justify-center items-center rounded-full -mr-8'
@@ -191,7 +193,9 @@ const PaymentMethodModal = ({ paymentModalVisible, setPaymentModalVisible, payme
                                             <Text className='mt-2 text-lg font-semibold'>{paymentDetails.ifscCode}</Text>
                                         </View>
                                         <View className='flex-row items-center justify-evenly w-1/3'>
-                                            <TouchableOpacity className='bg-gray-200 h-10 w-10 justify-center items-center rounded-full -ml-6'>
+                                            <TouchableOpacity className='bg-gray-200 h-10 w-10 justify-center items-center rounded-full -ml-6'
+                                            onPress={() => setIsBankDataEmpty(true)}
+                                            >
                                                 <FontAwesomeIcon icon={faPen} size={15} color='black' />
                                             </TouchableOpacity>
                                             <TouchableOpacity className='bg-gray-200 h-10 w-10 justify-center items-center rounded-full -mr-8'
