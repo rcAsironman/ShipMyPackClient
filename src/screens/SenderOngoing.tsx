@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import {
   View,
-  Text,
   Image,
   TouchableOpacity,
   StyleSheet,
@@ -19,6 +18,7 @@ import { useRoute, useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { BlurView } from '@react-native-community/blur';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
+import Text from '../components/Text';
 import {
   faArrowLeft,
   faUserEdit,

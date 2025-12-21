@@ -1,7 +1,6 @@
 import React, { useState, useRef } from 'react';
 import {
     View,
-    Text, // Ensure Text is imported
     ScrollView,
     TouchableOpacity,
     Image,
@@ -41,8 +40,8 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import { launchImageLibrary, launchCamera, Asset } from 'react-native-image-picker';
 import RNFS from 'react-native-fs';
-
-import OrderDetailsCarousel from './OrderDetailsCarousel'; // Assuming this component exists and is correctly implemented
+import Text from '../components/Text';
+import OrderDetailsCarousel from '../components/OrderDetailsCarousel';
 
 // --- Type Definitions ---
 interface ShipmentOrder {

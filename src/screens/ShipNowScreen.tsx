@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   View,
-  Text,
   TextInput,
   ScrollView,
   TouchableOpacity,
@@ -23,6 +22,7 @@ import {
 } from 'react-native';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
+import axios from 'axios';
 import {
   faCalendarAlt,
   faClock,
@@ -49,9 +49,13 @@ import {
   MediaType,
   ImagePickerResponse,
 } from 'react-native-image-picker';
-
+import Text from '../components/Text';
 // Ensure this path is correct for your project setup
 import { cities } from '../data/cities';
+import DatePicker from 'react-native-date-picker';
+import { ENDPOINTS } from '../constants/constants';
+import Toast from 'react-native-toast-message';
+import { useAuthStore } from '../store/authStore';
 
 const { height: screenHeight } = Dimensions.get('window');
 
@@ -72,6 +76,10 @@ interface CityPickerModalProps {
   allCities: string[];
 }
 
+type locationsType = {
+  id: number;
+  place: string;
+}
 const CityPickerModal: React.FC<CityPickerModalProps> = ({
   isVisible,
   onClose,
@@ -132,6 +140,7 @@ const CityPickerModal: React.FC<CityPickerModalProps> = ({
 
     setDisplayCities(results);
   }, [searchText, excludedCity, allCities]);
+
 
   const handleCityPress = (city: string) => {
     onSelectCity(city);
@@ -279,9 +288,9 @@ const CityPickerModal: React.FC<CityPickerModalProps> = ({
 interface CategoryPickerModalProps {
   isVisible: boolean; // Controls the Modal component's visibility
   onClose: () => void;
-  onSelectCategory: (category: string) => void;
+  onSelectCategory: (category: number, categoryName: string) => void;
   currentCategory: string | null;
-  categories: string[];
+  categories: {id: number, type: string}[];
 }
 
 const CategoryPickerModal: React.FC<CategoryPickerModalProps> = ({
@@ -294,7 +303,7 @@ const CategoryPickerModal: React.FC<CategoryPickerModalProps> = ({
   // ALL HOOKS MUST BE DECLARED UNCONDITIONALLY AT THE TOP LEVEL
   const pan = useRef(new Animated.Value(screenHeight)).current;
   const initialModalHeight = screenHeight * 0.7;
-
+ 
   // This state controls the rendering of the *content inside* the Modal.
   const [shouldRenderContent, setShouldRenderContent] = useState(false);
 
@@ -317,10 +326,7 @@ const CategoryPickerModal: React.FC<CategoryPickerModalProps> = ({
     }
   }, [isVisible, pan, initialModalHeight]);
 
-  const handleCategoryPress = (category: string) => {
-    onSelectCategory(category);
-    onClose();
-  };
+ 
 
   const panResponder = useRef(
     PanResponder.create({
@@ -400,21 +406,21 @@ const CategoryPickerModal: React.FC<CategoryPickerModalProps> = ({
 
               <FlatList
                 data={categories}
-                keyExtractor={item => item}
+                keyExtractor={item => item?.id?.toString()}
                 renderItem={({ item }) => (
                   <TouchableOpacity
-                    onPress={() => handleCategoryPress(item)}
+                    onPress={() => onSelectCategory(item?.id, item?.type)}
                     className={`py-3 px-2 border-b border-gray-200 ${
-                      item === currentCategory ? 'bg-blue-100' : ''
+                      item.type === currentCategory ? 'bg-blue-100' : ''
                     }`}
                   >
                     <Text
-                      className={`text-lg ${
-                        item === currentCategory ? 'font-semibold text-black' : 'text-gray-800'
+                      className={`text-lg ${ 
+                        item.type === currentCategory ? 'font-semibold text-black' : 'text-gray-800'
                       }`}
                     >
-                      {item}
-                      {item === currentCategory && <Text className="text-sm text-gray-500 ml-2"> (Selected)</Text>}
+                      {item?.type}
+                      {item.type === currentCategory && <Text className="text-sm text-gray-500 ml-2"> (Selected)</Text>}
                     </Text>
                   </TouchableOpacity>
                 )}
@@ -433,14 +439,15 @@ const CategoryPickerModal: React.FC<CategoryPickerModalProps> = ({
   );
 };
 
-
 // --- ShipNowScreen Component ---
 export default function ShipNowScreen({ navigation }: { navigation: any }) {
   const [shippingDate, setShippingDate] = useState<Date>(new Date());
   const [deliveryDate, setDeliveryDate] = useState<Date>(new Date());
   const [pickupTime, setPickupTime] = useState<Date>(new Date());
   const [deliveryTime, setDeliveryTime] = useState<Date>(new Date());
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
+  const [categoryName, setCategoryName] = useState<string | null>(null);
+  const [categoeryInText, setCategoeryInText] = useState<string | null>(null);
   const [itemWeight, setItemWeight] = useState<string>('');
   const [senderPincode, setSenderPincode] = useState<string>('');
   const [senderLocation, setSenderLocation] = useState<string | null>(null);
@@ -452,7 +459,8 @@ export default function ShipNowScreen({ navigation }: { navigation: any }) {
   const [receiverLocation, setReceiverLocation] = useState<string | null>(null);
   const [receiverAddress, setReceiverAddress] = useState<string>('');
   const [shippingVideo, setShippingVideo] = useState<VideoObject | null>(null);
-
+  const [mediaUrl, setMediaUrl] = useState<string | null>(null); // URL returned from backend after upload
+  const user = useAuthStore((state) => state.user);
   // Modal visibility states - these control the 'visible' prop of the React Native Modal component
   const [showShippingDatePicker, setShowShippingDatePicker] = useState<boolean>(false);
   const [showDeliveryDatePicker, setShowDeliveryDatePicker] = useState<boolean>(false);
@@ -473,20 +481,27 @@ export default function ShipNowScreen({ navigation }: { navigation: any }) {
   const inputStyle = 'border border-gray-300 px-4 py-3 rounded-xl bg-gray-50 text-gray-800 mb-4';
   const touchableInputStyle = 'flex-row items-center border border-gray-300 rounded-xl px-4 py-3 bg-gray-50 mb-4';
 
-  const categoriesList = [
-    'Electronics',
-    'Documents',
-    'Apparel/Clothing',
-    'Food Items (Non-Perishable)',
-    'Pickles & Preserves',
-    'Fragile Items',
-    'Books & Stationery',
-    'Liquids (Sealed)',
-    'Medical Supplies',
-    'Home Decor',
-    'Sporting Goods',
-    'Other'
-  ];
+  const [categoriesList, setCategoriesList] = useState([])
+
+
+
+  useEffect(() => {
+
+    try{
+      const res = axios.get(ENDPOINTS.CATEGOERYS);
+      res.then((response)=>{
+        setCategoriesList(response.data)
+      })
+    }
+    catch(err){
+      Toast.show({
+        type: 'error',
+        text1: 'Error fetching categories',
+        text2: 'Please try again later.'
+      })
+    }
+
+  },[])
 
   const onDateChangeWrapper = (setter: React.Dispatch<React.SetStateAction<Date>>, showSetter: React.Dispatch<React.SetStateAction<boolean>>) =>
     (event: DateTimePickerEvent, selectedDate?: Date) => {
@@ -499,8 +514,9 @@ export default function ShipNowScreen({ navigation }: { navigation: any }) {
   const onPickupTimeChange = onDateChangeWrapper(setPickupTime, setShowPickupTimePicker);
   const onDeliveryTimeChange = onDateChangeWrapper(setDeliveryTime, setShowDeliveryTimePicker);
 
-  const handleSelectCategory = (category: string) => {
+  const handleSelectCategory = (category: number, categoryName: string) => {
     setSelectedCategory(category);
+    setCategoeryInText(categoryName);
     setShowCategoryPicker(false);
   };
 
@@ -543,15 +559,66 @@ export default function ShipNowScreen({ navigation }: { navigation: any }) {
           setShippingVideo({
             uri: videoAsset.uri,
             name: videoAsset.fileName || videoAsset.uri.split('/').pop(),
-            type: videoAsset.type,
+            type: videoAsset.fileName,
             size: videoAsset.fileSize,
           });
-          Alert.alert('Video Uploaded', `Uploaded: ${videoAsset.fileName ?? 'Video'}`);
+          
+          const formData = new FormData();
+          // IMPORTANT: The field name here must match what your backend expects ("ticket_image")
+          formData.append('ticket_image', {
+            uri: videoAsset.uri,
+            name: videoAsset.fileName || 'uploaded_file.bin', // Provide a fallback name
+            type: videoAsset.fileName || 'application/octet-stream', // Provide a fallback type
+          } as any); // Type assertion for React Native FormData
+    
+          console.log('FormData for upload:', JSON.stringify(formData)); // For debugging, though it won't show file content directly
+    
+          const uploadResponse = await axios.post(
+            ENDPOINTS.UPLOAD_TICKET, // Your backend endpoint for file uploads
+            formData, // Pass the formData object directly as the second argument
+            {
+              headers: {
+                'Content-Type': 'multipart/form-data', // Axios will automatically set the boundary
+                'Authorization': `Bearer ${user?.authToken}`, // Use user?.authToken for optional chaining
+              },
+              onUploadProgress: (progressEvent) => {
+                const percentCompleted = progressEvent.total ? Math.round((progressEvent.loaded * 100) / progressEvent.total) : 0;
+                Toast.show({
+                  type: 'info',
+                  text1: 'Uploading...',
+                  text2: `${percentCompleted}% uploaded`,
+                  visibilityTime: 2000,
+                  position: 'bottom'
+                });
+              },
+            }
+          );
+
+          if (uploadResponse.status === 200 || uploadResponse.status === 201) {
+            // Extract the imageUrl from the response, as shown in your Swagger screenshot
+            const fileKey = uploadResponse.data.imageKey;
+            //const fileUrl = uploadResponse.data.imageUrl;
+            setMediaUrl(fileKey); // Store the URL received from backend
+            Toast.show({
+              type: 'success',
+              text1: 'File Uploaded!',
+              text2: `Successfully uploaded ${videoAsset?.fileName}.`,
+              position: 'bottom'
+            });
+            console.log('File uploaded to URL:', fileKey);
+          } else {
+            // More robust error handling based on backend response
+            throw new Error(uploadResponse.data?.message || `File upload failed with status: ${uploadResponse.status}`);
+          }
         }
       }
     } catch (err) {
       console.error('Video Upload Error:', err);
-      Alert.alert('Upload Failed', 'There was an error uploading your video.');
+      Toast.show({
+        type: 'error',
+        text1: "Upload Failed",
+        text2: `${err}`
+      })
     }
   };
 
@@ -606,7 +673,7 @@ export default function ShipNowScreen({ navigation }: { navigation: any }) {
       deliveryDate: deliveryDate.toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' }),
       pickupTime: pickupTime.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }),
       deliveryTime: deliveryTime.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }),
-      category: selectedCategory,
+      category: categoeryInText || 'N/A',
       itemWeight: `${itemWeight} kg`,
       shippingVideoName: shippingVideo?.name || 'N/A',
       senderPincode,
@@ -719,7 +786,7 @@ export default function ShipNowScreen({ navigation }: { navigation: any }) {
             <TouchableOpacity onPress={() => setShowCategoryPicker(true)} className={touchableInputStyle}>
               <FontAwesomeIcon icon={faListAlt} color="#888" size={18} />
               <Text className="ml-3 text-gray-800 text-base flex-1">
-                {selectedCategory || 'Select Item Category'}
+                {categoeryInText || 'Select Item Category'}
               </Text>
             </TouchableOpacity>
 
@@ -786,28 +853,18 @@ export default function ShipNowScreen({ navigation }: { navigation: any }) {
               </Text>
             </TouchableOpacity>
             {showShippingDatePicker && (
-              <Modal
-                transparent={true}
-                animationType="fade"
-                visible={showShippingDatePicker}
-                onRequestClose={() => setShowShippingDatePicker(false)}
-              >
-                <TouchableOpacity
-                  style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.5)' }}
-                  activeOpacity={1}
-                  onPressOut={() => setShowShippingDatePicker(false)}
-                >
-                  <View style={Platform.OS === 'ios' ? { height: 280, backgroundColor: 'white', borderRadius: 10, overflow: 'hidden' } : {}}>
-                    <DateTimePicker
-                      value={shippingDate}
-                      mode="date"
-                      display={Platform.OS === 'ios' ? 'inline' : 'default'}
-                      minimumDate={new Date()}
-                      onChange={onShippingDateChange}
-                    />
-                  </View>
-                </TouchableOpacity>
-              </Modal>
+              <DatePicker
+                modal
+                mode="date"
+                open={showShippingDatePicker}
+                date={shippingDate}
+                minimumDate={new Date()}
+                onConfirm={(date) => {
+                  setShippingDate(date);
+                  setShowShippingDatePicker(false);
+                }}
+                onCancel={() => setShowShippingDatePicker(false)}
+              />
             )}
 
             <TextInput
@@ -1136,7 +1193,7 @@ export default function ShipNowScreen({ navigation }: { navigation: any }) {
         isVisible={showCategoryPicker}
         onClose={() => setShowCategoryPicker(false)}
         onSelectCategory={handleSelectCategory}
-        currentCategory={selectedCategory}
+        currentCategory={categoeryInText}
         categories={categoriesList}
       />
 

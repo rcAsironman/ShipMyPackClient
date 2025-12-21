@@ -1,8 +1,8 @@
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
-import { SERVER_URL } from '../constants/constants';
+import { SERVER_URL, SOCKET_WS_URL } from '../constants/constants';
 
-const SOCKET_URL = SERVER_URL; // ✅ Replace with your Node.js server URL
+const SOCKET_URL = SOCKET_WS_URL; // Use the same URL as your server
 
 const SocketContext = createContext<Socket | null>(null);
 

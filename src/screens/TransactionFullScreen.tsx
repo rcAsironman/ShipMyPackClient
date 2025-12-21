@@ -1,7 +1,6 @@
 import React from 'react';
 import {
   View,
-  Text,
   SafeAreaView,
   StyleSheet,
   ScrollView,
@@ -15,6 +14,7 @@ import {
   faTimesCircle,
   faWallet,
 } from '@fortawesome/free-solid-svg-icons';
+import Text from '../components/Text';
 
 // ShipMyPack Colors
 const Colors = {

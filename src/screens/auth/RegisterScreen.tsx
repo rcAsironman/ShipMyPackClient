@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import {
   View,
-  Text,
   TextInput,
   TouchableOpacity,
   KeyboardAvoidingView,
@@ -16,6 +15,7 @@ import CountryPicker, {
   CountryCode,
   CountryModalProvider,
 } from 'react-native-country-picker-modal';
+import Text from '../../components/Text';
 
 export default function RegisterScreen({ navigation }: any) {
   const [firstName, setFirstName] = useState('');

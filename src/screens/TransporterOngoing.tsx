@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
     View,
-    Text,
     ScrollView,
     TouchableOpacity,
     Image,
@@ -43,7 +42,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import { launchImageLibrary, launchCamera, Asset } from 'react-native-image-picker';
 import RNFS from 'react-native-fs';
-
+import Text from '../components/Text';
 import OrderDetailsCarousel from '../components/OrderDetailsCarousel';
 import CustomAlertModal from '../components/CustomAlertModal';
 

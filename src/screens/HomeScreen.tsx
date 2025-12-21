@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { StatusBar, View, Text, Image, TouchableOpacity, ScrollView, Dimensions, Platform, Animated, Alert } from 'react-native';
+import { StatusBar, View, Image, TouchableOpacity, ScrollView, Dimensions, Platform, Animated, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import ImageCarousel from '../components/ImageCarousel';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome'
@@ -11,6 +11,8 @@ import { ENDPOINTS } from '../constants/constants';
 import { useSocket } from '../context/SocketProvider';
 import AvailableShipments from '../components/AvailableShipments';
 import LottieView from 'lottie-react-native';
+import { useAuthStore } from '../store/authStore';
+import Text from '../components/Text';
 
 // import AvailableShipments from '../components/AvailableShipments';
 
@@ -26,8 +28,11 @@ interface CarouselItem {
 
 // Carousel configuration
 const HomeScreen = ({ navigation }: { navigation: any }) => {
+
+
+  const user = useAuthStore(state => state.user);
   const socket = useSocket();
-  const userName = 'Karthik';
+  const userName = user?.firstName || "user";
   const earnings = 1234;
   const [carouselImages, setCarouselImages] = useState<CarouselItem[]>([]);
 
@@ -166,7 +171,7 @@ const HomeScreen = ({ navigation }: { navigation: any }) => {
 
             {/* Carousel */}
             {carouselImages?.length > 0 ? (
-              <ImageCarousel imagesData={carouselImages} />
+                <ImageCarousel imagesData={carouselImages} />
             ) : (
               <View style={{ height: 0, justifyContent: 'center', alignItems: 'center' }}>
 

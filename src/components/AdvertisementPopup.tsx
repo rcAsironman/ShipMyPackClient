@@ -2,13 +2,13 @@ import React, { useEffect, useRef } from 'react';
 import {
   Animated,
   View,
-  Text,
   Image,
   StyleSheet,
   Dimensions,
   TouchableOpacity,
   Linking,
 } from 'react-native';
+import Text from './Text';
 
 const { width, height } = Dimensions.get('window');
 

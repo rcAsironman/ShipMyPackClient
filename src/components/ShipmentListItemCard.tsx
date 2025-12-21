@@ -1,7 +1,6 @@
 import React from 'react';
 import {
   View,
-  Text,
   StyleSheet,
   TouchableOpacity,
   ViewStyle,
@@ -16,6 +15,7 @@ import {
   faWeightHanging, // Added for weight icon
   faDollarSign,    // Added for amount icon
 } from '@fortawesome/free-solid-svg-icons';
+import Text from './Text';
 
 // Design Tokens
 const DesignTokens = {

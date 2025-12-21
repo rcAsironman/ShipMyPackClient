@@ -24,7 +24,6 @@ export default function RootNavigator() {
   }
 
   return (
-
     <NavigationContainer>
       {isLoggedIn ? <AppStack /> : <AuthStack />}
       <CustomToast />

@@ -17,6 +17,11 @@ module.exports = {
             accent: "#00A699",       // Teal accent
           },
         },
+        borderStyle: {
+          dashed: 'dashed',
+          dotted: 'dotted',
+          solid: 'solid',
+        },
       },
     },
     plugins: [],

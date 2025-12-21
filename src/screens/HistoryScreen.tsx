@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
-  Text,
   Switch,
   FlatList,
   Animated,
@@ -10,6 +9,7 @@ import {
   Platform,
   TouchableOpacity,
   Image,
+  Dimensions,
 } from 'react-native';
 import { useNavigation, StackActions } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -21,6 +21,7 @@ import {
   faExclamationTriangle,
 } from '@fortawesome/free-solid-svg-icons';
 import Svg, { Path, Circle } from 'react-native-svg';
+import Text from '../components/Text';
 
 // --- Type Definitions ---
 // IMPORTANT: Keep these type definitions consistent across files if possible,
@@ -69,10 +70,10 @@ const mockOrders: ShipmentOrder[] = Array.from({ length: 12 }, (_, i) => {
     status: status,
     initialImages: hasImages
       ? [
-          `https://picsum.photos/id/${baseId}/200/200`,
-          `https://picsum.photos/id/${baseId + 1}/200/200`,
-          `https://picsum.photos/id/${baseId + 2}/200/200`,
-        ]
+        `https://picsum.photos/id/${baseId}/200/200`,
+        `https://picsum.photos/id/${baseId + 1}/200/200`,
+        `https://picsum.photos/id/${baseId + 2}/200/200`,
+      ]
       : [],
     // --- Detailed properties for Transporter screens ---
     shipmentAmount: 150 + (i * 10), // Specific payment for the transporter for this shipment
@@ -97,6 +98,8 @@ export default function HistoryScreen() {
   const [tab, setTab] = useState<ShipmentTab>('ongoing');
   const filteredOrders = mockOrders.filter(order => order.status === tab);
   const scaleAnim = useRef(new Animated.Value(1)).current;
+  const translateX = useRef(new Animated.Value(0)).current;
+  const screenWidth = Dimensions.get('window').width;
 
   useEffect(() => {
     Animated.loop(
@@ -117,9 +120,19 @@ export default function HistoryScreen() {
     ).start();
   }, [scaleAnim]);
 
+
+  const handleTabPress = (selectedTab: ShipmentTab, index: number) => {
+
+    setTab(selectedTab);
+    Animated.spring(translateX, {
+      toValue: (screenWidth / 2) * index,
+      useNativeDriver: true
+    }).start();
+  }
+
   return (
-    <SafeAreaView className="flex-1 bg-white px-4 pt-6">
-      <View className="flex-row justify-between mb-6">
+    <SafeAreaView className="flex-1 bg-white pt-6">
+      <View className="flex-row justify-between mb-6 px-4">
         <Text className="text-xl font-semibold text-gray-800">Your History</Text>
         <View className="items-end">
           <Text className="text-sm text-gray-500 mb-1">Currently viewing as</Text>
@@ -135,14 +148,29 @@ export default function HistoryScreen() {
         </View>
       </View>
 
-      <View className="flex-row bg-gray-100 p-1 rounded-xl mb-6">
-        {(['ongoing', 'completed'] as ShipmentTab[]).map((t) => (
+      <View className={`flex-row bg-gray-100 mb-6 h-10 items-center justify-between w-[100%] self-center`}>
+        <Animated.View
+          style={{
+            transform: [{ translateX }],
+            position: 'absolute',
+            backgroundColor: '#FF5A5F',
+            bottom: 3.5,
+            left: 20,
+            width: screenWidth / 2 - 50,
+            height: '80%',
+            borderRadius: 10
+          }}
+        />
+        {(['ongoing', 'completed'] as ShipmentTab[]).map((t, index) => (
           <Pressable
             key={t}
-            onPress={() => setTab(t)}
-            className={`flex-1 py-2 rounded-xl ${tab === t ? 'bg-[#FF5A5F]' : ''}`}
+            onPress={() => handleTabPress(t, index)}
+            style={{
+              width: '50%'
+            }}
+            className='h-full items-center justify-center'
           >
-            <Text className={`text-center font-medium ${tab === t ? 'text-white' : 'text-gray-700'}`}>
+            <Text className={`self-center  text-center font-medium ${tab === t ? 'text-white' : 'text-gray-700'}`}>
               {t[0].toUpperCase() + t.slice(1)}
             </Text>
           </Pressable>
@@ -150,6 +178,7 @@ export default function HistoryScreen() {
       </View>
 
       <FlatList
+        className='px-4'
         data={filteredOrders}
         keyExtractor={item => item.id}
         contentContainerStyle={{ paddingBottom: 120 }}

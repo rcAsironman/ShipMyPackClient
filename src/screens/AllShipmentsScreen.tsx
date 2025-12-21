@@ -1,10 +1,13 @@
 // AllShipmentsScreen.tsx
 
 import React from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Dimensions, Platform, StatusBar, SafeAreaView } from 'react-native';
+import { View, StyleSheet, FlatList, TouchableOpacity, Dimensions, Platform, StatusBar, SafeAreaView } from 'react-native';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
 import ShipmentListItemCard from '../components/ShipmentListItemCard'; // This is correctly imported now
+import Text from '../components/Text';
+
+
 const { width: SCREEN_WIDTH, height: screenHeight } = Dimensions.get('window');
 
 // --- Design Tokens (can be imported from a central file if you have one) ---

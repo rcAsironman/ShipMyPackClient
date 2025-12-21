@@ -1,7 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import {
     View,
-    Text,
     ScrollView,
     TouchableOpacity,
     Image,
@@ -25,7 +24,7 @@ import {
     faComments,
     faPhone
 } from '@fortawesome/free-solid-svg-icons';
-
+import Text from '../components/Text';
 import OrderDetailsCarousel from '../components/OrderDetailsCarousel'; // Re-use the carousel component
 
 // --- Type Definitions ---

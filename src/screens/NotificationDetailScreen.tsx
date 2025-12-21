@@ -1,7 +1,6 @@
 import React, { useEffect } from 'react';
 import {
   View,
-  Text,
   TouchableOpacity,
   ScrollView,
   StatusBar,
@@ -11,6 +10,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
+import Text from '../components/Text';
 
 export default function NotificationDetailScreen() {
   const navigation = useNavigation();

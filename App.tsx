@@ -12,6 +12,9 @@ import { Alert, View } from 'react-native';
 import AdvertisementPopup from './src/components/AdvertisementPopup';
 import axios from 'axios';
 import { ENDPOINTS } from './src/constants/constants';
+import { useAuthStore } from './src/store/authStore';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+
 
 type AdvertisementPopupProps = {
   id: string,
@@ -26,7 +29,7 @@ export default function App() {
 
   const [showAd, setShowAd] = useState(false);
   const [advertisement, setAdvertisement] = useState<AdvertisementPopupProps | null>(null);
-
+  const auth = useAuthStore.getState();
 
   const handleAdvertisementInitialFetch = async () => {
 
@@ -57,9 +60,6 @@ export default function App() {
   }
   useEffect(() => {
     handleAdvertisementInitialFetch()
-
-
-
   }, [])
 
   return (
@@ -84,7 +84,9 @@ export default function App() {
             />
           </View>
         )}
+        <SafeAreaProvider>
         <RootNavigator />
+        </SafeAreaProvider>
       </SocketProvider>
     </GestureHandlerRootView>
   );

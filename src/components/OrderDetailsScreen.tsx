@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
   View,
-  Text,
   Image,
   TouchableOpacity,
   StyleSheet,
@@ -29,9 +28,8 @@ import {
   faClock, faCheckCircle, faSpinner, faMapPin
 } from '@fortawesome/free-solid-svg-icons';
 import { Picker } from '@react-native-picker/picker';
-
+import Text from './Text';
 import OrderDetailsCarousel from '../components/ImageCarousel';
-
 import CustomAlertModal from './CustomAlertModal';
 import { SpinningIcon } from './SpinningIcon';
 

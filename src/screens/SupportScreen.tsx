@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
     View,
-    Text,
     TextInput,
     TouchableOpacity,
     FlatList,
@@ -19,7 +18,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faArrowLeft, faPhone, faPaperclip, faTimes, faCheck, faCheckDouble } from '@fortawesome/free-solid-svg-icons';
 import { GestureHandlerRootView, PanGestureHandler, State } from 'react-native-gesture-handler';
 import { launchImageLibrary } from 'react-native-image-picker';
-
+import Text from '../components/Text';
 // --- Constants ---
 const generateUniqueId = () => Math.random().toString(36).substring(2) + Date.now().toString(36);
 const MY_USER_ID = 'user123';
@@ -35,7 +34,7 @@ const SUPPORT_REPLIES = [
     "Got it. I'm checking with the team now."
 ];
 
-const SupportScreen = ({ navigation }) => {
+const SupportScreen = ({ navigation }:{navigation : any}) => {
     const [messages, setMessages] = useState([]);
     const [inputText, setInputText] = useState('');
     const [isSupportTyping, setIsSupportTyping] = useState(false);

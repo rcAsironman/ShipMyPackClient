@@ -8,12 +8,12 @@ import {
   Modal,
   TouchableOpacity,
   ActivityIndicator,
-  Text,
   Image, // Import Image for fallback if FastImage is not used
 } from 'react-native';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faTimesCircle, faArrowLeft, faArrowRight } from '@fortawesome/free-solid-svg-icons';
 import FastImage from 'react-native-fast-image'; // Make sure FastImage is installed
+import Text from './Text';
 
 const { width, height } = Dimensions.get('window');
 const ITEM_WIDTH = width - 32; // Assuming a standard margin of 16px on each side

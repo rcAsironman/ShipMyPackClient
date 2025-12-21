@@ -2,11 +2,11 @@ import React, { useEffect, useRef } from 'react';
 import {
   Modal,
   View,
-  Text,
   Pressable,
   TouchableOpacity,
   Animated,
 } from 'react-native';
+import Text from './Text';
 
 interface CustomAlertModalProps {
   visible: boolean;
